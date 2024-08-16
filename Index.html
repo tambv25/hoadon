@@ -179,15 +179,19 @@
                     return [80, 297];
             }
         }
+        function calculatePageHeight() {
+            const content = document.getElementById('content');
+            return content.scrollHeight;
+        }
         function applyPaperSize(size) {
+            const height = calculatePageHeight();
             var style = document.createElement('style');
             if (size === '80mm') {
-                // sửa độ dài của trang ở đây 80mm là rộng còn 297 là chiều dài 
-                style.innerHTML = '@page { size: 80mm 297mm; } #content { width: 75mm; }';
+                style.innerHTML = `@page { size: 80mm ${height}px; } #content { width: 75mm; height: ${height}px; }`;
             } else if (size === 'a4') {
-                style.innerHTML = '@page { size: A4; } #content { width: 205mm; }';
+                style.innerHTML = `@page { size: A4; } #content { width: 205mm; height: ${height}px; }`;
             } else if (size === 'a5') {
-                style.innerHTML = '@page { size: A5; } #content { width: 140mm; }';
+                style.innerHTML = `@page { size: A5; } #content { width: 140mm; height: ${height}px; }`;
             }
             var oldStyle = document.getElementById('print-style');
             if (oldStyle) {
@@ -196,7 +200,6 @@
             style.id = 'print-style';
             document.head.appendChild(style);
         }
-
         document.getElementById('paper-size').addEventListener('change', function () {
             applyPaperSize(this.value);
         });
@@ -249,60 +252,29 @@
             if (!value) return '0';
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
         }
-
         function exportToPDF() {
             var element = document.getElementById('content');
             var selectedSize = document.getElementById('paper-size').value;
-            var [width, height] = getPaperSizeInMM(selectedSize);
+            var [width, _] = getPaperSizeInMM(selectedSize);
+            var height = calculatePageHeight();
 
-            // Tạo một div tạm thời để chứa nội dung với nền trắng
-            var tempDiv = document.createElement('div');
-            tempDiv.appendChild(element.cloneNode(true));
-            tempDiv.style.width = width + 'mm';
-            tempDiv.style.backgroundColor = 'white';
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            document.body.appendChild(tempDiv);
-
-            // Tính toán tỷ lệ để đảm bảo nội dung vừa với chiều rộng của PDF
-            var contentWidth = tempDiv.offsetWidth;
-            var scale = (width / contentWidth) * 5; // Tăng scale lên 5 lần
-
-            html2canvas(tempDiv, {
-                scale: scale,
+            html2canvas(element, {
+                scale: 5,
                 backgroundColor: '#ffffff',
                 logging: false,
                 useCORS: true,
-                windowWidth: contentWidth,
-                imageTimeout: 0,
-                removeContainer: true
+                windowWidth: element.offsetWidth,
+                height: height
             }).then(canvas => {
                 var imgData = canvas.toDataURL('image/png', 1.0);
                 var pdf = new jspdf.jsPDF({
                     orientation: 'portrait',
-                    unit: 'mm',
-                    format: [width, height]
+                    unit: 'px',
+                    format: [element.offsetWidth * 5, height * 5]
                 });
 
-                var pdfWidth = pdf.internal.pageSize.getWidth();
-                var aspectRatio = canvas.height / canvas.width;
-                var imgHeight = pdfWidth * aspectRatio;
-
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight, '', 'FAST');
-
-                // Xử lý nhiều trang nếu cần
-                if (imgHeight > height) {
-                    var pageHeight = pdf.internal.pageSize.getHeight();
-                    for (var i = 1; i <= Math.ceil(imgHeight / pageHeight) - 1; i++) {
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 0, -(pageHeight * i), pdfWidth, imgHeight, '', 'FAST');
-                    }
-                }
-
+                pdf.addImage(imgData, 'PNG', 0, 0, element.offsetWidth * 5, height * 5, '', 'FAST');
                 pdf.save("hoa-don.pdf");
-
-                // Xóa div tạm thời
-                document.body.removeChild(tempDiv);
             });
         }
         document.addEventListener('DOMContentLoaded', function () {
