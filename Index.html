@@ -31,6 +31,13 @@
             <option value="a4">A4</option>
             <option value="a5">A5</option>
         </select>
+        <select id="payment-method">
+            <option value="transfer">Chuyển khoản</option>
+            <option value="cash">Tiền mặt</option>
+        </select>
+        <select id="accountSelect" style="display: none;">
+            <option value="vpb">VPB: 113809086 - Chủ TK: LE BICH NGOC</option>
+        </select>
         <input type="text" id="printer-ip" placeholder="Địa chỉ IP máy in">
         <input type="text" id="printer-port" placeholder="Port máy in">
         <button onclick="printInvoice()">In</button>
@@ -132,8 +139,7 @@
             document.getElementById('phiShip').textContent = formatCurrency(BAN_GIAO['Phí ship'] || '0');
             document.getElementById('ghiChu').textContent = BAN_GIAO['Ghi chú'] || '';
 
-            updateProductTable();
-            updateQRCode();
+            updateProductTable(); updatePaymentMethod();
         }
         function maskPhoneNumber(phoneNumber) {
             if (!phoneNumber) return '';
@@ -242,10 +248,58 @@
             }
         }
 
+        function updatePaymentMethod() {
+            const paymentMethod = document.getElementById('payment-method').value;
+            const accountSelect = document.getElementById('accountSelect');
+            const qrCodeContainer = document.querySelector('.footer');
+
+            if (paymentMethod === 'transfer') {
+                accountSelect.style.display = 'block';
+                qrCodeContainer.style.display = 'block';
+                updateAccountInfo();
+            } else {
+                accountSelect.style.display = 'none';
+                qrCodeContainer.style.display = 'none';
+            }
+        }
+
+        function updateAccountInfo() {
+            const accountSelect = document.getElementById('accountSelect');
+            const selectedAccount = accountSelect.options[accountSelect.selectedIndex];
+            const accountInfo = selectedAccount.text;
+
+            // Cập nhật thông tin tài khoản trong phần footer
+            const footerAccountInfo = document.createElement('div');
+            footerAccountInfo.textContent = accountInfo;
+            const footer = document.querySelector('.footer');
+            const existingAccountInfo = footer.querySelector('.account-info');
+            if (existingAccountInfo) {
+                footer.replaceChild(footerAccountInfo, existingAccountInfo);
+            } else {
+                footer.insertBefore(footerAccountInfo, footer.firstChild);
+            }
+            footerAccountInfo.className = 'account-info';
+
+            updateQRCode();
+        }
+
+        // Thêm event listener cho select payment-method
+        document.getElementById('payment-method').addEventListener('change', updatePaymentMethod);
+        document.getElementById('accountSelect').addEventListener('change', updateAccountInfo);
+
         function updateQRCode() {
-            const amount = BAN_GIAO['Còn phải thanh toán'] || 0;
-            const qrCodeUrl = `https://img.vietqr.io/image/VPbank-113809086-compact.png?amount=${amount}&addInfo=Thanh toan don hang&accountName=LE BICH NGOC`;
-            document.getElementById('qrCodeImage').src = qrCodeUrl;
+            const paymentMethod = document.getElementById('payment-method').value;
+            if (paymentMethod === 'transfer') {
+                const amount = BAN_GIAO['Còn phải thanh toán'] || 0;
+                const accountSelect = document.getElementById('accountSelect');
+                const selectedAccount = accountSelect.options[accountSelect.selectedIndex];
+                const bankInfo = selectedAccount.text.split(':')[0].trim();
+                const accountNumber = selectedAccount.text.split(':')[1].split('-')[0].trim();
+                const accountName = selectedAccount.text.split('-')[1].trim();
+
+                const qrCodeUrl = `https://img.vietqr.io/image/${bankInfo}-${accountNumber}-compact.png?amount=${amount}&addInfo=Thanh toan don hang&accountName=${encodeURIComponent(accountName)}`;
+                document.getElementById('qrCodeImage').src = qrCodeUrl;
+            }
         }
 
         function formatCurrency(value) {
