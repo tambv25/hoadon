@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Mua Hàng Chi Tiết</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        .shop-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .filter-section label {
+            font-weight: bold;
+        }
+
+        .filter-section input[type="date"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .filter-section button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .filter-section button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            padding: 10px;
+            text-align: center;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-section input[type="date"],
+            .filter-section button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="shop-info">
+        <p><strong>Tên Shop:</strong> Shop nhà CoCo</p>
+        <p><strong>Địa Chỉ:</strong> 122 - Linh Trung - Thủ Đức - TP.HCM</p>
+        <p><strong>Điện Thoại:</strong> 0986 857 087</p>
+    </div>
+
+    <div class="filter-section">
+        <label for="startDate">Từ ngày:</label>
+        <input type="date" id="startDate">
+        <label for="endDate">Đến ngày:</label>
+        <input type="date" id="endDate">
+        <button onclick="filterByDate()">Lọc</button>
+    </div>
+
+    <h1>BÁO CÁO MUA HÀNG CHI TIẾT</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Số Phiếu</th>
+                <th>Ngày Tháng Order</th>
+                <th>Barcode</th>
+                <th>Tên Hàng Hóa</th>
+                <th>Đvt</th>
+                <th>Số Lượng</th>
+                <th>Đơn Giá</th>
+                <th>Thành Tiền</th>
+                <th>Số ĐT</th>
+                <th>Tên KH</th>
+                <th>Địa Chỉ</th>
+                <th>Ghi Chú</th>
+            </tr>
+        </thead>
+        <tbody id="data-table-body">
+            <!-- Dữ liệu sẽ được chèn vào đây -->
+        </tbody>
+    </table>
+
+    <div class="footer" id="footer-total">
+        Tổng Cộng: 0 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 đ
+    </div>
+
+    <script>
+        let allData = []; // Lưu trữ tất cả dữ liệu để có thể lọc lại sau
+
+        function fetchData() {
+            const url = 'https://script.google.com/macros/s/AKfycbw8jw9fUs5DnjckMHhtQZgFtPgTOt5WSkLHx3Ms5bnjC20DBz8m6jlpCvcv1oSTsQ/exec'; // URL của Google Script
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Kiểm tra dữ liệu nhận được
+                    if (data.success && Array.isArray(data.data)) {
+                        allData = data.data; // Lưu trữ dữ liệu vào biến toàn cục
+                        populateTable(allData); // Hiển thị tất cả dữ liệu ban đầu
+                    } else {
+                        console.error('Dữ liệu không đúng định dạng mong đợi hoặc không có dữ liệu.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi lấy dữ liệu:', error);
+                });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString; // Trả về chuỗi gốc nếu không phải ngày hợp lệ
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function populateTable(data) {
+            const tableBody = document.getElementById('data-table-body');
+            tableBody.innerHTML = ''; // Xóa nội dung trước khi thêm mới
+            let totalQuantity = 0;
+            let totalAmount = 0;
+
+            data.forEach((item, index) => {
+                if (item['idnhap'] && item['Số lượng'] && item['Thành tiền']) {
+                    const row = document.createElement('tr');
+
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item['idnhap'] || ' '}</td>
+                        <td>${formatDate(item['Ngày nhập']) || ' '}</td>
+                        <td>${item['SKU'] || ' '}</td>
+                        <td>${item['Tên sản phẩm'] || ' '}</td>
+                        <td>${item['ĐVT'] || ' '}</td>
+                        <td>${item['Số lượng'] || ' '}</td>
+                        <td>${item['Đơn giá'] ? parseInt(item['Đơn giá']).toLocaleString() + ' đ' : ' '}</td>
+                        <td>${item['Thành tiền'] ? parseInt(item['Thành tiền']).toLocaleString() + ' đ' : ' '}</td>
+                        <td>${item['SĐT'] || ' '}</td>
+                        <td>${item['Họ tên'] || ' '}</td>
+                        <td>${item['Địa chỉ'] || ' '}</td>
+                        <td>${item['Ghi chú'] || ''}</td>
+                    `;
+
+                    tableBody.appendChild(row);
+
+                    totalQuantity += parseInt(item['Số lượng']) || 0;
+                    totalAmount += parseInt(item['Thành tiền']) || 0;
+                }
+            });
+
+            document.getElementById('footer-total').innerHTML = `Tổng Cộng: ${totalQuantity} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${totalAmount.toLocaleString()} đ`;
+        }
+
+        function filterByDate() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+
+            // Kiểm tra nếu cả hai trường ngày đều được nhập
+            if (startDate && endDate) {
+                // Lọc dữ liệu dựa trên khoảng thời gian đã chọn
+                const filteredData = allData.filter(item => {
+                    const itemDate = new Date(item['Ngày nhập']);
+                    return itemDate >= startDate && itemDate <= endDate;
+                });
+
+                populateTable(filteredData); // Hiển thị dữ liệu đã lọc
+            } else {
+                alert('Vui lòng chọn cả hai ngày để lọc dữ liệu.');
+            }
+        }
+
+        window.onload = function () {
+            fetchData();
+        };
+    </script>
+
+</body>
+
+</html>
