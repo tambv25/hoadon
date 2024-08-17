@@ -172,17 +172,18 @@
 
         function getPaperSizeInMM(size) {
             //thêm các loại siiz ơ day
+            const height = calculatePageHeight();
             switch (size) {
                 case '80mm':
-                    return [80, 297];
+                    return [80, height];
                 case 'a4':
-                    return [210, 297];
+                    return [210, height];
                 case 'a3':
-                    return [210, 297];
+                    return [210, height];
                 case 'a5':
-                    return [148, 210];
+                    return [148, height];
                 default:
-                    return [80, 297];
+                    return [80, height];
             }
         }
         function calculatePageHeight() {
