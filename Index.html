@@ -73,13 +73,29 @@
             <tbody id="orderDetailsBody"></tbody>
         </table>
 
-        <div class="total" style="text-align: left; padding-left: 2mm;">
-            Tổng tiền: <span id="tongGiaTri"></span><br>
-            Phí ship: <span id="phiShip"></span><br>
-            Giảm giá: <span id="giamGia"></span><br>
-            Đã thanh toán: <span id="khachdatra"></span><br>
-            Còn phải trả: <span id="conlai"></span><br>
+        <div class="total" style="padding-left: 2mm;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Tổng tiền:</span>
+                <span id="tongGiaTri" style="text-align: right;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Phí ship:</span>
+                <span id="phiShip" style="text-align: right;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Giảm giá:</span>
+                <span id="giamGia" style="text-align: right;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Đã thanh toán:</span>
+                <span id="khachdatra" style="text-align: right;"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Còn phải thanh toán:</span>
+                <span id="conlai" style="text-align: right;"></span>
+            </div>
         </div>
+        
 
         <i style="font-weight: bold; font-size: 18px;">Ghi chú: <span id="ghiChu"></span></i>
         <div class="footer">
