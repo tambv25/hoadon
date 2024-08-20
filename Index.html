@@ -114,7 +114,7 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbymXzWyQHrBs4XhdUG_xf81CLdikOgVHQs0KSa3_25tADbwN2pGxuy8osXa39G4xGbF/exec';
         var BAN_GIAO = {};
         var CT_BANGIAO = [];
-
+        var CT_BANGIAO1 = [];
         function showLoading() {
             document.getElementById('loading-screen').style.display = 'flex';
         }
@@ -130,6 +130,7 @@
                     if (data.success) {
                         BAN_GIAO = data.ctuResult || {};
                         CT_BANGIAO = data.tsDetailResult || [];
+                        CT_BANGIAO1 = data.originalTsDetailResult || [];
                         updateUI();
                     } else {
                         console.error('Lỗi:', data.message);
