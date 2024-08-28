@@ -624,8 +624,6 @@
                     <input type="checkbox" id="hidePurchasedItems" checked>
                     <span class="slider round"></span>
                 </label>
-                
-                
                 <button id="refreshButton" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
             </div>
         </div>
@@ -685,13 +683,6 @@
 
         async function fetchCombinedData() {
             try {
-                const savedData = loadDataFromLocalStorage();
-                if (savedData) {
-                    console.log('Đang sử dụng dữ liệu đã lưu');
-                    allData = savedData;
-                    return allData;
-                }
-
                 const [khoData, chiTietBanHangData] = await Promise.all([
                     apiRequest('Kho', 'Find', { Rows: [], Properties: { Selector: 'Filter(Kho, [Số lượng cần mua]>0)' } }),
                     apiRequest('Chi tiết bán hàng', 'Find', { Rows: [], Properties: { Selector: 'Filter(Chi tiết bán hàng, true)' } })
@@ -717,7 +708,6 @@
                     };
                 });
 
-                saveDataToLocalStorage();
                 return allData;
             } catch (error) {
                 console.error('Lỗi khi tải dữ liệu:', error);
@@ -961,18 +951,23 @@
         }
         async function reloadData() {
             try {
-                localStorage.removeItem('purchaseReportData'); // Xóa dữ liệu cũ trong localStorage
-                allData = await fetchCombinedData(); // Tải lại dữ liệu mới
-                updateTable(); // Cập nhật bảng với dữ liệu mới
+                $('#loadingOverlay').show();
+                localStorage.removeItem('purchaseReportData');
+                allData = await fetchCombinedData();
+                updateTable();
+                populateGroupFilter();
             } catch (error) {
                 console.error('Lỗi khi tải lại dữ liệu:', error);
-                alert('Có lỗi xảy ra khi tải lại dữ liệu. Vui lòng thử lại sau.');
+                $('#reportContent').html(`<p class="error">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.</p>`);
+            } finally {
+                $('#loadingOverlay').hide();
             }
         }
 
         async function initializeReport() {
             try {
-                await fetchCombinedData();
+                $('#reportContent').html('<p class="loading">Đang tải dữ liệu...</p>');
+                await fetchCombinedData(); // Luôn tải dữ liệu mới
                 updateTable();
                 populateGroupFilter();
                 setupImageZoom();
