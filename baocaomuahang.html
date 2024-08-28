@@ -47,8 +47,14 @@
         main {
             background-color: white;
             border-radius: 10px;
-            padding: 20px;
+            padding: 2px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        td:nth-child(3) { /* Giả sử cột "Tên Hàng Hóa" là cột thứ 3 */
+            width: 20px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         h2 {
@@ -57,6 +63,9 @@
             margin-top: 0;
             margin-bottom: 20px;
             text-align: center;
+        }
+        tr {
+            padding: 5px 0;
         }
 
         .search-filter {
@@ -154,7 +163,7 @@
         }
 
         td {
-            padding-left: 4px;
+            padding: 15px 4px; /* Tăng padding trên và dưới */
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
         }
@@ -191,22 +200,6 @@
             justify-content: center;
         }
 
-        .quantity-btn {
-            background-color: #bbb;
-            color: rgba(0, 0, 0, 0.9);
-            border: none;
-            border-radius: 4px;
-            width: 24px;
-            height: 24px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 0 4px;
-        }
-
-        .quantity-btn:hover {
-            background-color: #357abd;
-        }
-
         .quantity-input {
             width: 39px;
             text-align: center;
@@ -215,7 +208,7 @@
             font-weight: bold;
             border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 4px;
+            margin: 10px;
         }
 
         .over-purchased {
@@ -571,6 +564,9 @@
         .export-btn:hover {
             background-color: #2980b9;
         }
+        .ten_sanpham{
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -709,14 +705,7 @@
                     <tr>
                         <th></th>
                         <th>Hình Ảnh</th>
-                        <th>Tên Hàng Hóa</th>
-                        <th>
-                            <div class="quantity-group">
-                                <span>Cần Mua</span>
-                                <span>Đã Mua</span>
-                                <span>Còn Lại</span>
-                            </div>
-                        </th>
+                        <th class="tenhanhhoa">Tên Hàng Hóa</th>
                         <th>Hành động</th>
                         <th>Trạng thái</th>
                         <th>Ghi Chú</th>
@@ -734,16 +723,16 @@
             <tr class="${hiddenClass}">
                 <td>${index + 1}</td>
                 <td><img src="https://www.appsheet.com/template/gettablefileurl?appName=App_QuanLyBanHangV2120824-2154080&tableName=${SHEET_NAME_2}&fileName=${encodeURIComponent( item['Ảnh sản phẩm'])}" alt="Ảnh" class="zoomable-image"></td>
-                <td>${item['Tên sản phẩm'] || ''}</td>
-                <td>
+                <td class="ten_sanpham">${item['Tên sản phẩm'] || ''}
+                
                     <div class="quantity-group">
-                        <span class="quantity-needed">${item['Số lượng cần mua'] || 0}</span>
+                        
                         <div class="quantity-control">
-                            <button class="quantity-btn" onclick="changeQuantity(${index}, -1)">-</button>
+                            <span class="quantity-needed">Cần ${item['Số lượng cần mua'] || 0} </span>
                             <input type="number" class="quantity-input" value="${item.daMua}" min="0" onchange="updateQuantity(this, ${index})">
-                            <button class="quantity-btn" onclick="changeQuantity(${index}, 1)">+</button>
+                            <span class="quantity-remaining">${conLai}</span>
                         </div>
-                        <span class="quantity-remaining">${conLai}</span>
+                        
                     </div>
                 </td>
                 <td><button class="buy-btn" onclick="buyItem(${index})">Mua</button></td>
@@ -809,14 +798,6 @@
             saveDataToLocalStorage();
         }
 
-        function changeQuantity(index, change) {
-            const input = $(`#purchaseTable .quantity-input`).eq(index);
-            let value = parseInt(input.val()) || 0;
-            value += change;
-            if (value < 0) value = 0;
-            input.val(value);
-            updateQuantity(input[0], index);
-        }
 
         function updateTable() {
             const searchTerm = $('#searchInput').val().toLowerCase();
