@@ -138,7 +138,6 @@
             align-items: center;
             font-size: 16px;
             cursor: pointer;
-            flex: 1 1 100%;
         }
 
         .search-filter input[type="checkbox"] {
@@ -418,12 +417,6 @@
             flex: 1 1 100%;
         }
 
-        .toggle-label {
-            margin-right: 10px;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-
         .switch {
             position: relative;
             display: inline-block;
@@ -508,17 +501,12 @@
             flex: 1 1 100%;
         }
 
-        .toggle-label {
-            margin-right: 10px;
-            font-size: 14px;
-            white-space: nowrap;
-        }
 
         .refresh-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 23px;
+            font-size: 35px;
             color: #4a90e2;
             margin-left: 10px;
             padding: 5px;
@@ -588,6 +576,7 @@
 
         .save-btn {
             background-color: #4CAF50;
+            margin-right: 10px;
         }
 
         .export-btn {
@@ -628,11 +617,15 @@
                 </select>
             </div>
             <div class="toggle-container">
-                <span class="toggle-label">Ẩn sản phẩm đã mua</span>
+                <button id="saveFilteredData" class="refresh-btn"><i class="fas fa-save"></i>
+                </button>
+                <button id="exportPDF" class="refresh-btn"><i class="fas fa-print"></i></button>
                 <label class="switch">
                     <input type="checkbox" id="hidePurchasedItems" checked>
                     <span class="slider round"></span>
                 </label>
+                
+                
                 <button id="refreshButton" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
             </div>
         </div>
@@ -644,11 +637,6 @@
             <button id="prevPage">Trước</button>
             <span id="pageInfo"></span>
             <button id="nextPage">Sau</button>
-        </div>
-        <!-- Cập nhật HTML để thêm nút xuất PDF -->
-        <div class="button-container">
-            <button id="saveFilteredData" class="save-btn">Lưu dữ liệu vào bảng</button>
-            <button id="exportPDF" class="export-btn">Xuất PDF</button>
         </div>
     </main>
 
