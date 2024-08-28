@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -50,7 +49,9 @@
             padding: 2px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
-        td:nth-child(3) { /* Giả sử cột "Tên Hàng Hóa" là cột thứ 3 */
+
+        td:nth-child(3) {
+            /* Giả sử cột "Tên Hàng Hóa" là cột thứ 3 */
             width: 20px;
             white-space: nowrap;
             overflow: hidden;
@@ -64,6 +65,7 @@
             margin-bottom: 20px;
             text-align: center;
         }
+
         tr {
             padding: 5px 0;
         }
@@ -80,7 +82,36 @@
         }
 
         .search-filter>* {
-            flex: 1 1 200px;
+            flex: 1 1 100%;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-group select {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .search-filter {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                flex-direction: row;
+            }
+
+            .filter-group select {
+                flex: 1 1 50%;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .search-filter>* {
+                flex: 1 1 auto;
+            }
         }
 
         .search-filter input[type="text"],
@@ -163,7 +194,8 @@
         }
 
         td {
-            padding: 15px 4px; /* Tăng padding trên và dưới */
+            padding: 15px 4px;
+            /* Tăng padding trên và dưới */
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
         }
@@ -526,7 +558,7 @@
         }
 
         .quantity-purchased {
-            
+
             color: #2ecc71;
             /* Màu xanh lá */
         }
@@ -569,7 +601,8 @@
         .export-btn:hover {
             background-color: #2980b9;
         }
-        .ten_sanpham{
+
+        .ten_sanpham {
             font-weight: 600;
         }
     </style>
@@ -582,16 +615,18 @@
         <!-- Cập nhật phần HTML trong .search-filter -->
         <div class="search-filter">
             <input type="text" id="searchInput" placeholder="Tìm kiếm...">
-            <select id="groupFilter">
-                <option value="">Tất cả nhóm</option>
-            </select>
-            <select id="statusFilter">
-                <option value="">Tất cả trạng thái</option>
-                <option value="Chưa mua">Chưa mua</option>
-                <option value="Đang mua">Đang mua</option>
-                <option value="Đã mua">Đã mua</option>
-                <option value="Vượt số lượng">Vượt số lượng</option>
-            </select>
+            <div class="filter-group">
+                <select id="groupFilter">
+                    <option value="">Tất cả nhóm</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Chưa mua">Chưa mua</option>
+                    <option value="Đang mua">Đang mua</option>
+                    <option value="Đã mua">Đã mua</option>
+                    <option value="Vượt số lượng">Vượt số lượng</option>
+                </select>
+            </div>
             <div class="toggle-container">
                 <span class="toggle-label">Ẩn sản phẩm đã mua</span>
                 <label class="switch">
@@ -727,7 +762,7 @@
                 tableHTML += `
             <tr class="${hiddenClass}">
                 <td>${index + 1}</td>
-                <td><img src="https://www.appsheet.com/template/gettablefileurl?appName=App_QuanLyBanHangV2120824-2154080&tableName=${SHEET_NAME_2}&fileName=${encodeURIComponent( item['Ảnh sản phẩm'])}" alt="Ảnh" class="zoomable-image"></td>
+                <td><img src="https://www.appsheet.com/template/gettablefileurl?appName=App_QuanLyBanHangV2120824-2154080&tableName=${SHEET_NAME_2}&fileName=${encodeURIComponent(item['Ảnh sản phẩm'])}" alt="Ảnh" class="zoomable-image"></td>
                 <td class="ten_sanpham">${item['Tên sản phẩm'] || ''}
                 
                     <div class="quantity-group">
@@ -985,7 +1020,7 @@
                     {
                         table: {
                             headerRows: 1,
-                            widths: [20, '*','*','*', 60, 50, 70],
+                            widths: [20, '*', '*', '*', 60, 50, 70],
                             body: [
                                 [
                                     { text: '', style: 'tableHeader' },
