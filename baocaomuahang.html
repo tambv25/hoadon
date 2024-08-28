@@ -415,13 +415,14 @@
             bottom: 0;
             background-color: #ccc;
             transition: .4s;
+            height: 29px;
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 26px;
-            width: 26px;
+            height: 22px;
+            width: 22px;
             left: 4px;
             bottom: 4px;
             background-color: white;
@@ -430,6 +431,7 @@
 
         input:checked+.slider {
             background-color: #2196F3;
+            height: 29px;
         }
 
         input:focus+.slider {
@@ -484,7 +486,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 30px;
+            font-size: 23px;
             color: #4a90e2;
             margin-left: 10px;
             padding: 5px;
@@ -518,16 +520,19 @@
         }
 
         .quantity-needed {
+            font-size: 23px;
             color: #e74c3c;
             /* Màu đỏ */
         }
 
         .quantity-purchased {
+            
             color: #2ecc71;
             /* Màu xanh lá */
         }
 
         .quantity-remaining {
+            font-size: 23px;
             color: #3498db;
             /* Màu xanh dương cho số còn lại */
         }
@@ -728,7 +733,7 @@
                     <div class="quantity-group">
                         
                         <div class="quantity-control">
-                            <span class="quantity-needed">Cần ${item['Số lượng cần mua'] || 0} </span>
+                            <span class="quantity-needed">${item['Số lượng cần mua'] || 0} </span>
                             <input type="number" class="quantity-input" value="${item.daMua}" min="0" onchange="updateQuantity(this, ${index})">
                             <span class="quantity-remaining">${conLai}</span>
                         </div>
