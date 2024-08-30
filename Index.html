@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -18,11 +17,11 @@
 
     <style>
         body {
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
         }
 
         #content {
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
         }
 
         th,
@@ -404,7 +403,10 @@
 
         function formatCurrency(value) {
             if (!value) return '0';
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+                .format(value)
+                .replace('₫', '')  // Loại bỏ ký tự đồng
+                .trim();  // Loại bỏ khoảng trắng thừa nếu có
         }
         function exportToPDF() {
             var element = document.getElementById('content');
@@ -460,7 +462,7 @@
                 }
                 lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
             }, false);
-            
+
 
 
 
