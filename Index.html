@@ -32,11 +32,25 @@
             text-align: left;
         }
 
+        .option-row {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .option-row>* {
+            flex: 1;
+            margin: 0 2px;
+        }
+
+        /* Giữ lại các styles hiện có và thêm vào đây */
         #print-options select,
         #print-options input,
         #print-options button {
             width: 100%;
             margin-bottom: 5px;
+            padding: 5px;
+            font-size: 16px;
         }
 
         @media screen and (max-width: 600px) {
@@ -64,7 +78,7 @@
             }
 
             #content {
-                margin-top: 300px;
+                margin-top: 180px;
                 /* Adjust based on the height of your print-options */
             }
         }
@@ -104,22 +118,30 @@
         <div class="loading-spinner"></div>
     </div>
     <div id="print-options">
-        <select id="paper-size">
-            <option value="A80" selected>80mm x 297mm</option>
-            <option value="a4">A4</option>
-            <option value="a5">A5</option>
-        </select>
-        <select id="payment-method">
-            <option value="transfer">Chuyển khoản</option>
-            <option value="cash">Tiền mặt</option>
-        </select>
+        <div class="option-row">
+            <select id="paper-size">
+                <option value="A80" selected>80mm x 297mm</option>
+                <option value="a4">A4</option>
+                <option value="a5">A5</option>
+            </select>
+            <select id="payment-method">
+                <option value="cash">Tiền mặt</option>
+                <option value="transfer">Chuyển khoản</option>
+            </select>
+        </div>
         <select id="accountSelect" style="display: none;">
             <option value="vpb">VPB: 113809086 - Chủ TK: LE BICH NGOC</option>
         </select>
-        <input type="text" id="printer-ip" placeholder="Địa chỉ IP máy in">
-        <input type="text" id="printer-port" placeholder="Port máy in">
-        <button onclick="printInvoice()">In</button>
-        <button onclick="exportToPDF()">Xuất PDF</button>
+        <div class="option-row">
+            <input type="text" id="printer-ip" placeholder="Địa chỉ IP máy in">
+            <input type="text" id="printer-port" placeholder="Port máy in">
+        </div>
+
+        <div class="option-row">
+            <button onclick="printInvoice()">In</button>
+            <button onclick="savePrinterInfo()">Lưu</button>
+            <button onclick="exportToPDF()">Xuất PDF</button>
+        </div>
     </div>
 
     <div id="content">
@@ -268,6 +290,28 @@
             }
         }
 
+        function savePrinterInfo() {
+            const printerIP = document.getElementById('printer-ip').value;
+            const printerPort = document.getElementById('printer-port').value;
+
+            if (printerIP && printerPort) {
+                localStorage.setItem('printerIP', printerIP);
+                localStorage.setItem('printerPort', printerPort);
+                alert('Thông tin máy in đã được lưu.');
+            } else {
+                alert('Vui lòng nhập đầy đủ thông tin IP và Port của máy in.');
+            }
+        }
+
+        function loadPrinterInfo() {
+            const savedIP = localStorage.getItem('printerIP');
+            const savedPort = localStorage.getItem('printerPort');
+
+            if (savedIP) document.getElementById('printer-ip').value = savedIP;
+            if (savedPort) document.getElementById('printer-port').value = savedPort;
+        }
+
+
         function getPaperSizeInMM(size) {
             //thêm các loại siiz ơ day
             const height = calculatePageHeight();
@@ -309,10 +353,11 @@
             applyPaperSize(this.value);
         });
 
+        // Chỉnh sửa hàm printInvoice để sử dụng thông tin đã lưu
         function printInvoice() {
             var selectedSize = document.getElementById('paper-size').value;
-            var printerIP = document.getElementById('printer-ip').value;
-            var printerPort = document.getElementById('printer-port').value;
+            var printerIP = localStorage.getItem('printerIP') || document.getElementById('printer-ip').value;
+            var printerPort = localStorage.getItem('printerPort') || document.getElementById('printer-port').value;
 
             applyPaperSize(selectedSize);
 
@@ -462,6 +507,9 @@
                 }
                 lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
             }, false);
+
+
+            loadPrinterInfo(); // Tải thông tin máy in đã lưu
 
 
 
