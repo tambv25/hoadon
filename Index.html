@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -17,7 +18,80 @@
 
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        #content {
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        th,
+        td {
+            border-top: 0.5px solid rgb(118 116 116);
+            border-bottom: 0.5px solid rgb(118 116 116);
+            padding: 1mm;
+            text-align: left;
+        }
+
+        #print-options select,
+        #print-options input,
+        #print-options button {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        @media screen and (max-width: 600px) {
+            #print-options {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 10px;
+                z-index: 1000;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                flex-direction: column;
+                align-items: center;
+                max-width: 300px;
+                /* hoặc giá trị phù hợp khác */
+                margin: 0 auto;
+            }
+
+            #print-options select,
+            #print-options input,
+            #print-options button {
+                width: 90%;
+                margin-bottom: 5px;
+            }
+
+            #content {
+                margin-top: 300px;
+                /* Adjust based on the height of your print-options */
+            }
+        }
+
+        /* General improvements */
+        #print-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        #print-options select,
+        #print-options input,
+        #print-options button {
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        @media print {
+            #print-options {
+                display: none;
+            }
+
+            #content {
+                margin-top: 0;
+            }
         }
 
         /* Add other styles as needed */
@@ -366,6 +440,27 @@
                 console.error('Vui lòng cung cấp số hóa đơn trong URL (ví dụ: ?SOBH=HD001)');
                 hideLoading();
             }
+
+
+
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const printOptions = document.getElementById('print-options');
+            const content = document.getElementById('content');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function () {
+                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                if (scrollTop > lastScrollTop) {
+                    // Scrolling down
+                    printOptions.style.transform = 'translateY(-100%)';
+                } else {
+                    // Scrolling up
+                    printOptions.style.transform = 'translateY(0)';
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            }, false);
+            
 
 
 
