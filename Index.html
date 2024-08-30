@@ -125,7 +125,7 @@
                 <option value="a5">A5</option>
             </select>
             <select id="payment-method">
-                <option value="transfer">Chuyển khoản</option>
+                <option value="transfer" selected>Chuyển khoản</option>
                 <option value="cash">Tiền mặt</option>
                 
             </select>
@@ -480,6 +480,7 @@
             });
         }
         document.addEventListener('DOMContentLoaded', function () {
+            updatePaymentMethod();
             const urlParams = new URLSearchParams(window.location.search);
             const SOBH = urlParams.get('SOBH');
             if (SOBH) {
