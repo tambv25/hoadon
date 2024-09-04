@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -620,6 +621,7 @@
                 <button id="saveFilteredData" class="refresh-btn"><i class="fas fa-save"></i>
                 </button>
                 <button id="exportPDF" class="refresh-btn"><i class="fas fa-print"></i></button>
+                <button id="exportExcel" class="refresh-btn"><i class="fas fa-file-excel"></i></button>
                 <label class="switch">
                     <input type="checkbox" id="hidePurchasedItems" checked>
                     <span class="slider round"></span>
@@ -990,6 +992,56 @@
                 }
             });
         }
+        function exportToExcel() {
+    const vietnamTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+    const formattedDate = vietnamTime.toLocaleDateString('vi-VN');
+
+    // Định nghĩa tên cột
+    const columns = [
+        { header: 'STT', key: 'STT', width: 5 },
+        { header: 'SKU', key: 'SKU', width: 15 },
+        { header: 'Nhóm', key: 'Nhóm', width: 15 },
+        { header: 'Tên Sản Phẩm', key: 'TenSanPham', width: 30 },
+        { header: 'Cần mua', key: 'CanMua', width: 10 },
+        { header: 'Đã mua', key: 'DaMua', width: 10 },
+        { header: 'Còn lại', key: 'ConLai', width: 10 },
+        { header: 'Ghi chú', key: 'GhiChu', width: 20 }
+    ];
+
+    const dataToExport = filteredData.map((item, index) => ({
+        'STT': index + 1,
+        'SKU': item['SKU'],
+        'Nhóm': item['Nhóm Sản Phẩm'],
+        'TenSanPham': item['Tên sản phẩm'],
+        'CanMua': item['Số lượng cần mua'],
+        'DaMua': item.daMua,
+        'ConLai': item['Số lượng cần mua'] - item.daMua,
+        'GhiChu': item.ghiChu || ''
+    }));
+
+    // Tạo một workbook mới và một worksheet
+    const wb = XLSX.utils.book_new();
+    
+    // Tạo mảng dữ liệu bao gồm cả tiêu đề
+    const wsData = [
+        columns.map(col => col.header),
+        ...dataToExport.map(item => columns.map(col => item[col.key]))
+    ];
+    
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Thiết lập chiều rộng cột
+    ws['!cols'] = columns.map(col => ({ wch: col.width }));
+
+    // Thêm worksheet vào workbook
+    XLSX.utils.book_append_sheet(wb, ws, "Báo cáo mua hàng");
+
+    // Tạo tên file
+    const fileName = `bao-cao-mua-hang-${formattedDate.replace(/\//g, '-')}.xlsx`;
+
+    // Xuất file
+    XLSX.writeFile(wb, fileName);
+}
 
         function generatePDF() {
             const vietnamTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
@@ -1091,6 +1143,10 @@
 
             $('#exportPDF').click(function () {
                 generatePDF();
+            });
+
+            $('#exportExcel').click(function () {
+                exportToExcel();
             });
         });
     </script>
