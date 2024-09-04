@@ -168,9 +168,9 @@
             <thead>
                 <tr>
                     <th>TÊN SP</th>
-                    <th>SL</th>
-                    <th>ĐƠN GIÁ</th>
-                    <th>TỔNG TIỀN</th>
+                    <th style="text-align: center;">SL</th>
+                    <th style="text-align: center;">ĐƠN GIÁ</th>
+                    <th style="text-align: right;">TỔNG TIỀN</th>
                 </tr>
             </thead>
             <tbody id="orderDetailsBody"></tbody>
@@ -455,30 +455,44 @@
                 .trim();  // Loại bỏ khoảng trắng thừa nếu có
         }
         function exportToPDF() {
-            var element = document.getElementById('content');
-            var selectedSize = document.getElementById('paper-size').value;
-            var [width, _] = getPaperSizeInMM(selectedSize);
-            var height = calculatePageHeight();
-
-            html2canvas(element, {
-                scale: 5,
-                backgroundColor: '#ffffff',
-                logging: false,
-                useCORS: true,
-                windowWidth: element.offsetWidth,
-                height: height
-            }).then(canvas => {
-                var imgData = canvas.toDataURL('image/png', 1.0);
-                var pdf = new jspdf.jsPDF({
+    var element = document.getElementById('content');
+    var selectedSize = document.getElementById('paper-size').value;
+    
+    // Áp dụng kích thước trang được chọn
+    applyPaperSize(selectedSize);
+    
+    // Đợi một chút để đảm bảo các thay đổi được áp dụng
+    setTimeout(() => {
+        html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            windowWidth: element.offsetWidth,
+            windowHeight: element.scrollHeight
+        }).then(canvas => {
+            var imgData = canvas.toDataURL('image/png');
+            var pdf;
+            if (selectedSize === 'a4') {
+                pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            } else if (selectedSize === 'a5') {
+                pdf = new jspdf.jsPDF('p', 'mm', 'a5');
+            } else {
+                pdf = new jspdf.jsPDF({
                     orientation: 'portrait',
-                    unit: 'px',
-                    format: [element.offsetWidth * 5, height * 5]
+                    unit: 'mm',
+                    format: [80, element.scrollHeight * 0.264583] // convert pixels to mm
                 });
-
-                pdf.addImage(imgData, 'PNG', 0, 0, element.offsetWidth * 5, height * 5, '', 'FAST');
-                pdf.save(BAN_GIAO['Khách hàng'] + BAN_GIAO['Ngày bán'] + ".pdf");
-            });
-        }
+            }
+            
+            var pdfWidth = pdf.internal.pageSize.getWidth();
+            var pdfHeight = pdf.internal.pageSize.getHeight();
+            var ratio = pdfWidth / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width * ratio, canvas.height * ratio);
+            pdf.save(BAN_GIAO['Khách hàng'] + BAN_GIAO['Ngày bán'] + ".pdf");
+        });
+    }, 500); // Đợi 500ms
+}
         document.addEventListener('DOMContentLoaded', function () {
             updatePaymentMethod();
             const urlParams = new URLSearchParams(window.location.search);
