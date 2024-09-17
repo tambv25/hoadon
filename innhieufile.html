@@ -10,8 +10,18 @@
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
-        body {
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             font-family: 'Roboto', sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 15px;
         }
 
         .action-group {
@@ -20,6 +30,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .table-container {
@@ -27,6 +38,30 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #dataTable_wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #dataTable_wrapper .row:nth-child(2) {
+            flex-grow: 1;
+            overflow: auto;
+        }
+
+        #dataTable {
+            width: 100%;
+        }
+
+        .dataTables_scrollBody {
+            flex-grow: 1;
+            overflow: auto !important;
         }
 
         .invoice-template {
@@ -78,7 +113,6 @@
             font-size: 12px;
             line-height: 1.2;
             font-weight: 600;
-
         }
 
         .trai {
@@ -93,8 +127,6 @@
             text-align: right;
         }
 
-
-
         .invoice-footer {
             margin-top: 20px;
             text-align: center;
@@ -103,6 +135,15 @@
         .company-name {
             font-size: 16px;
             font-weight: bold;
+        }
+
+        .table-dark {
+            background-color: rgb(30, 136, 229) !important;
+        }
+
+        .table-dark th {
+            background-color: rgb(30, 136, 229) !important;
+            color: white !important;
         }
 
         @media print {
@@ -137,22 +178,19 @@
                 font-size: 12px;
             }
 
-            /* Đảm bảo hóa đơn cuối cùng không tạo trang trống */
             .invoice-template:last-child {
                 page-break-after: avoid;
             }
 
             .cotten {
                 width: 45%;
-
             }
         }
     </style>
 </head>
 
-<body class="bg-light">
-    <div class="container mt-5">
-        <h1 class="text-center mb-5 animate__animated animate__fadeInDown">Quản lý Đơn hàng</h1>
+<body>
+    <div class="main-container">
         <div class="action-group animate__animated animate__fadeInUp">
             <div class="row g-3">
                 <div class="col-md-3">
@@ -350,8 +388,30 @@
                     url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json'
                 },
                 pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]]
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+                scrollY: '100%',
+                scrollCollapse: true
             });
+
+            // Điều chỉnh chiều cao của bảng sau khi khởi tạo
+            $(window).resize(function() {
+                adjustTableHeight();
+            });
+            adjustTableHeight();
+        }
+
+        function adjustTableHeight() {
+            var windowHeight = $(window).height();
+            var actionGroupHeight = $('.action-group').outerHeight(true);
+            var tableContainerPadding = parseInt($('.table-container').css('padding-top')) + 
+                                        parseInt($('.table-container').css('padding-bottom'));
+            var dataTableHeaderHeight = $('#dataTable_wrapper .row:first-child').outerHeight(true);
+            var dataTableFooterHeight = $('#dataTable_wrapper .row:last-child').outerHeight(true);
+            
+            var availableHeight = windowHeight - actionGroupHeight - tableContainerPadding - 
+                                  dataTableHeaderHeight - dataTableFooterHeight - 30; // 30px buffer
+
+            $('.dataTables_scrollBody').css('max-height', availableHeight + 'px');
         }
 
         function showOrderDetail(orderId) {
@@ -387,7 +447,7 @@
 
             updateQRCode(order);
 
-            document.querySelector('.container').style.display = 'none';
+            document.querySelector('.main-container').style.display = 'none';
             invoiceTemplate.style.display = 'block';
 
             const backButton = document.createElement('button');
@@ -395,7 +455,7 @@
             backButton.className = 'btn btn-secondary mt-3';
             backButton.onclick = function () {
                 invoiceTemplate.style.display = 'none';
-                document.querySelector('.container').style.display = 'block';
+                document.querySelector('.main-container').style.display = 'flex';
                 invoiceTemplate.removeChild(backButton);
             };
             invoiceTemplate.appendChild(backButton);
@@ -418,14 +478,11 @@
                 qrCodeText.style.display = 'none';
             }
 
-            // Cập nhật QR code nếu cần
             const selectedOrders = getSelectedOrders();
             if (selectedOrders.length > 0) {
                 updateQRCode(selectedOrders[0]);
             }
         }
-        // Đảm bảo rằng hàm này được gọi khi thay đổi phương thức thanh toán
-        document.getElementById('payment-method').addEventListener('change', updatePaymentMethod);
 
         function updateQRCode(order, container = document) {
             const paymentMethod = document.getElementById('payment-method').value;
@@ -460,10 +517,8 @@
                 invoiceTemplate.id = `invoice-${order.idban}`;
                 invoiceTemplate.style.display = 'block';
 
-                // Điền thông tin hóa đơn
                 fillInvoiceTemplate(invoiceTemplate, order);
 
-                // Thêm page-break cho tất cả trừ hóa đơn cuối cùng
                 if (index < selectedOrders.length - 1) {
                     invoiceTemplate.style.pageBreakAfter = 'always';
                 }
@@ -471,23 +526,19 @@
                 printContainer.appendChild(invoiceTemplate);
             });
 
-            // Ẩn container chính và hiển thị container in
-            document.querySelector('.container').style.display = 'none';
+            document.querySelector('.main-container').style.display = 'none';
             printContainer.style.display = 'block';
 
-            // Đợi DOM cập nhật và in
             setTimeout(() => {
                 window.print();
-                // Sau khi in xong, khôi phục lại giao diện
                 setTimeout(() => {
-                    document.querySelector('.container').style.display = 'block';
+                    document.querySelector('.main-container').style.display = 'flex';
                     printContainer.style.display = 'none';
                     printContainer.innerHTML = '';
                 }, 100);
             }, 500);
         }
 
-        // Hàm phụ trợ để điền thông tin hóa đơn
         function fillInvoiceTemplate(template, order) {
             template.querySelector('#invoiceCustomerName').textContent = order['Khách hàng'];
             template.querySelector('#invoiceCustomerPhone').textContent = order.SĐT;
@@ -499,7 +550,6 @@
             template.querySelector('#invoiceRemaining').textContent = formatCurrency(order['Còn phải thanh toán']);
             template.querySelector('#invoiceghichu').textContent = order['Ghi chú'];
 
-            // Điền chi tiết đơn hàng
             const invoiceItems = template.querySelector('#invoiceItems');
             invoiceItems.innerHTML = '';
             const orderDetails = chiTietData.filter(detail => detail.idban === order.idban);
@@ -517,7 +567,6 @@
                 totalCell.style.textAlign = 'right';
             });
 
-            // Cập nhật mã QR
             updateQRCode(order, template);
         }
 
@@ -525,8 +574,8 @@
             if (!value) return '0';
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
                 .format(value)
-                .replace('₫', '')  // Loại bỏ ký tự đồng
-                .trim();  // Loại bỏ khoảng trắng thừa nếu có
+                .replace('₫', '')
+                .trim();
         }
 
         function getSelectedOrders() {
@@ -602,7 +651,9 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
         };
+
+        // Gọi adjustTableHeight khi cửa sổ thay đổi kích thước
+        $(window).resize(adjustTableHeight);
     </script>
 </body>
-
 </html>
