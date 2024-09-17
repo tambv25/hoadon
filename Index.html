@@ -127,20 +127,15 @@
             <select id="payment-method">
                 <option value="transfer" selected>Chuyển khoản</option>
                 <option value="cash">Tiền mặt</option>
-                
+
             </select>
         </div>
         <select id="accountSelect" style="display: none;">
             <option value="vpb">VPB: 113809086 - Chủ TK: LE BICH NGOC</option>
         </select>
-        <div class="option-row">
-            <input type="text" id="printer-ip" placeholder="Địa chỉ IP máy in">
-            <input type="text" id="printer-port" placeholder="Port máy in">
-        </div>
 
         <div class="option-row">
             <button onclick="printInvoice()">In</button>
-            <button onclick="savePrinterInfo()">Lưu</button>
             <button onclick="exportToPDF()">Xuất PDF</button>
         </div>
     </div>
@@ -291,27 +286,6 @@
             }
         }
 
-        function savePrinterInfo() {
-            const printerIP = document.getElementById('printer-ip').value;
-            const printerPort = document.getElementById('printer-port').value;
-
-            if (printerIP && printerPort) {
-                localStorage.setItem('printerIP', printerIP);
-                localStorage.setItem('printerPort', printerPort);
-                alert('Thông tin máy in đã được lưu.');
-            } else {
-                alert('Vui lòng nhập đầy đủ thông tin IP và Port của máy in.');
-            }
-        }
-
-        function loadPrinterInfo() {
-            const savedIP = localStorage.getItem('printerIP');
-            const savedPort = localStorage.getItem('printerPort');
-
-            if (savedIP) document.getElementById('printer-ip').value = savedIP;
-            if (savedPort) document.getElementById('printer-port').value = savedPort;
-        }
-
 
         function getPaperSizeInMM(size) {
             //thêm các loại siiz ơ day
@@ -354,43 +328,10 @@
             applyPaperSize(this.value);
         });
 
-        // Chỉnh sửa hàm printInvoice để sử dụng thông tin đã lưu
         function printInvoice() {
             var selectedSize = document.getElementById('paper-size').value;
-            var printerIP = localStorage.getItem('printerIP') || document.getElementById('printer-ip').value;
-            var printerPort = localStorage.getItem('printerPort') || document.getElementById('printer-port').value;
-
             applyPaperSize(selectedSize);
-
-            if (printerIP && printerPort) {
-                // Gửi yêu cầu in đến máy chủ
-                fetch(`http://${printerIP}:${printerPort}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        content: document.getElementById('content').innerHTML
-                    }),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('In thành công qua máy in: ' + printerIP + ':' + printerPort);
-                        } else {
-                            alert('Lỗi khi in qua mạng. Chuyển sang in mặc định.');
-                            window.print();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Lỗi khi in qua mạng. Chuyển sang in mặc định.');
-                        window.print();
-                    });
-            } else {
-                // In mặc định nếu không có IP hoặc port
-                window.print();
-            }
+            window.print();
         }
 
         function updatePaymentMethod() {
@@ -455,44 +396,44 @@
                 .trim();  // Loại bỏ khoảng trắng thừa nếu có
         }
         function exportToPDF() {
-    var element = document.getElementById('content');
-    var selectedSize = document.getElementById('paper-size').value;
-    
-    // Áp dụng kích thước trang được chọn
-    applyPaperSize(selectedSize);
-    
-    // Đợi một chút để đảm bảo các thay đổi được áp dụng
-    setTimeout(() => {
-        html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            windowWidth: element.offsetWidth,
-            windowHeight: element.scrollHeight
-        }).then(canvas => {
-            var imgData = canvas.toDataURL('image/png');
-            var pdf;
-            if (selectedSize === 'a4') {
-                pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-            } else if (selectedSize === 'a5') {
-                pdf = new jspdf.jsPDF('p', 'mm', 'a5');
-            } else {
-                pdf = new jspdf.jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: [80, element.scrollHeight * 0.264583] // convert pixels to mm
+            var element = document.getElementById('content');
+            var selectedSize = document.getElementById('paper-size').value;
+
+            // Áp dụng kích thước trang được chọn
+            applyPaperSize(selectedSize);
+
+            // Đợi một chút để đảm bảo các thay đổi được áp dụng
+            setTimeout(() => {
+                html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: element.offsetWidth,
+                    windowHeight: element.scrollHeight
+                }).then(canvas => {
+                    var imgData = canvas.toDataURL('image/png');
+                    var pdf;
+                    if (selectedSize === 'a4') {
+                        pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                    } else if (selectedSize === 'a5') {
+                        pdf = new jspdf.jsPDF('p', 'mm', 'a5');
+                    } else {
+                        pdf = new jspdf.jsPDF({
+                            orientation: 'portrait',
+                            unit: 'mm',
+                            format: [80, element.scrollHeight * 0.264583] // convert pixels to mm
+                        });
+                    }
+
+                    var pdfWidth = pdf.internal.pageSize.getWidth();
+                    var pdfHeight = pdf.internal.pageSize.getHeight();
+                    var ratio = pdfWidth / canvas.width;
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width * ratio, canvas.height * ratio);
+                    pdf.save(BAN_GIAO['Khách hàng'] + BAN_GIAO['Ngày bán'] + ".pdf");
                 });
-            }
-            
-            var pdfWidth = pdf.internal.pageSize.getWidth();
-            var pdfHeight = pdf.internal.pageSize.getHeight();
-            var ratio = pdfWidth / canvas.width;
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width * ratio, canvas.height * ratio);
-            pdf.save(BAN_GIAO['Khách hàng'] + BAN_GIAO['Ngày bán'] + ".pdf");
-        });
-    }, 500); // Đợi 500ms
-}
+            }, 500); // Đợi 500ms
+        }
         document.addEventListener('DOMContentLoaded', function () {
             updatePaymentMethod();
             const urlParams = new URLSearchParams(window.location.search);
@@ -523,13 +464,6 @@
                 }
                 lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
             }, false);
-
-
-            loadPrinterInfo(); // Tải thông tin máy in đã lưu
-
-
-
-
         });
     </script>
 </body>
