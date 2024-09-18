@@ -10,11 +10,13 @@
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
-        body, html {
+        body,
+        html {
             height: 100%;
             margin: 0;
             padding: 0;
             font-family: 'Roboto', sans-serif;
+            background-color: #f0f0f0;
         }
 
         .main-container {
@@ -70,8 +72,7 @@
             padding: 2mm;
             margin: 20px auto;
             background: white;
-            font-size: 12pt;
-            border: 1px solid #ddd;
+            font-size: 12px;
         }
 
         .invoice-header {
@@ -93,12 +94,13 @@
             font-weight: bold;
             line-height: 1.2;
             margin-bottom: 10px;
+            font-size: 12pt;
         }
 
         .invoice-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11.5px;
+            font-size: 12.5px;
         }
 
         .invoice-table th,
@@ -147,51 +149,45 @@
         }
 
         @media print {
-            body * {
-                visibility: hidden;
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
-            .invoice-table th,
-            .invoice-table td {
-                border-top: 0px solid rgb(118 116 116);
-                border-bottom: 0.5px solid rgb(118 116 116);
-                padding: 1mm 0.5mm;
-            }
-
-            #multiplePrintContainer,
-            #multiplePrintContainer * {
-                visibility: visible;
-            }
-
-            #multiplePrintContainer {
-                position: absolute;
-                left: 0;
-                top: 0;
+            * {
+                color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
             .invoice-template {
-                page-break-after: always;
-                page-break-inside: avoid;
-                display: block;
-                width: 80mm;
+                font-size: 12pt;
+                line-height: 1.2;
+                color: black;
+            }
+
+            .invoice-template * {
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+
+            .invoice-template {
                 margin-top: 0;
-                font-size: 12px;
+                page-break-after: always;
             }
 
-            .invoice-template:last-child {
+            #invoice-template {
                 page-break-after: avoid;
+                page-break-inside: avoid;
             }
 
-            .cotten {
-                width: 45%;
-            }
         }
     </style>
 </head>
 
 <body>
     <div class="main-container">
-        <div class="action-group animate__animated animate__fadeInUp">
+        <div class="action-group ">
             <div class="row g-3">
                 <div class="col-md-3">
                     <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm tên, đơn hàng...">
@@ -394,7 +390,7 @@
             });
 
             // Điều chỉnh chiều cao của bảng sau khi khởi tạo
-            $(window).resize(function() {
+            $(window).resize(function () {
                 adjustTableHeight();
             });
             adjustTableHeight();
@@ -403,13 +399,13 @@
         function adjustTableHeight() {
             var windowHeight = $(window).height();
             var actionGroupHeight = $('.action-group').outerHeight(true);
-            var tableContainerPadding = parseInt($('.table-container').css('padding-top')) + 
-                                        parseInt($('.table-container').css('padding-bottom'));
+            var tableContainerPadding = parseInt($('.table-container').css('padding-top')) +
+                parseInt($('.table-container').css('padding-bottom'));
             var dataTableHeaderHeight = $('#dataTable_wrapper .row:first-child').outerHeight(true);
             var dataTableFooterHeight = $('#dataTable_wrapper .row:last-child').outerHeight(true);
-            
-            var availableHeight = windowHeight - actionGroupHeight - tableContainerPadding - 
-                                  dataTableHeaderHeight - dataTableFooterHeight - 30; // 30px buffer
+
+            var availableHeight = windowHeight - actionGroupHeight - tableContainerPadding -
+                dataTableHeaderHeight - dataTableFooterHeight - 30; // 30px buffer
 
             $('.dataTables_scrollBody').css('max-height', availableHeight + 'px');
         }
@@ -499,8 +495,8 @@
                 const qrCodeImg = document.createElement('img');
                 qrCodeImg.src = qrCodeUrl;
                 qrCodeImg.alt = "QR Code";
-                qrCodeImg.style.width = "100px";
-                qrCodeImg.style.height = "100px";
+                qrCodeImg.style.width = "110px";
+                qrCodeImg.style.height = "110px";
                 qrCodeContainer.innerHTML = '';
                 qrCodeContainer.appendChild(qrCodeImg);
             } else {
@@ -519,7 +515,8 @@
 
                 fillInvoiceTemplate(invoiceTemplate, order);
 
-                if (index < selectedOrders.length - 1) {
+                // Chỉ thêm page break nếu không phải là đơn hàng cuối cùng và có nhiều hơn một đơn hàng
+                if (index < selectedOrders.length - 1 && selectedOrders.length > 1) {
                     invoiceTemplate.style.pageBreakAfter = 'always';
                 }
 
@@ -656,4 +653,5 @@
         $(window).resize(adjustTableHeight);
     </script>
 </body>
+
 </html>
