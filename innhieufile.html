@@ -156,6 +156,56 @@
         }
 
 
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        #loginForm form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        #loginForm h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        #loginForm input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #loginForm button {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #loginForm button:hover {
+            background-color: #0056b3;
+        }
+        .form-check-input{
+            width: 1.5rem;
+            height: 1.5rem;
+
+        }
+
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact !important;
@@ -193,30 +243,48 @@
 </head>
 
 <body>
-    <div class="main-container">
-        <div class="action-group ">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm tên, đơn hàng...">
-                </div>
-                <div class="col-md-2">
-                    <input type="date" id="startDate" class="form-control" placeholder="Từ ngày">
-                </div>
-                <div class="col-md-2">
-                    <input type="date" id="endDate" class="form-control" placeholder="Đến ngày">
-                </div>
-                <div class="col-md-2">
-                    <select id="payment-method" class="form-select">
-                        <option value="transfer" selected>Chuyển khoản</option>
-                        <option value="cash">Tiền mặt</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="accountSelect" class="form-select" style="display: none;">
-                        <option value="vpb">VPB: 113809086 - Chủ TK: LE BICH NGOC</option>
-                    </select>
-                </div>
-                <div class="col-md-1">
+    <div id="loginForm">
+        <form onsubmit="return login()">
+            <h2>Đăng nhập</h2>
+            <input type="text" id="username" placeholder="Tên đăng nhập" required>
+            <input type="password" id="password" placeholder="Mật khẩu" required>
+            <div style="margin-bottom: 1rem;">
+                <input type="checkbox" id="rememberLogin" style=" width: 30px;">
+                <label for="rememberLogin">Ghi nhớ đăng nhập</label>
+            </div>
+            <button type="submit">Đăng nhập</button>
+        </form>
+    </div>
+    <div id="mainContent" style="display: none;">
+
+        <div class="main-container">
+            <div class="action-group ">
+                <div class="row g-3">
+                    <div class="col-md-1">
+                        <button onclick="logout()" class="btn btn-secondary">Đăng xuất</button>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" id="searchInput" class="form-control"
+                            placeholder="Tìm kiếm tên, đơn hàng...">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" id="startDate" class="form-control" placeholder="Từ ngày">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" id="endDate" class="form-control" placeholder="Đến ngày">
+                    </div>
+                    <div class="col-md-2">
+                        <select id="payment-method" class="form-select">
+                            <option value="transfer" selected>Chuyển khoản</option>
+                            <option value="cash">Tiền mặt</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="accountSelect" class="form-select" style="display: none;">
+                            <option value="vpb">VPB: 113809086 - Chủ TK: LE BICH NGOC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
                     <button id="printSelectedBtn" class="btn btn-primary w-100" data-bs-toggle="tooltip"
                         title="In đơn hàng đã chọn">
                         <i class="bi bi-printer"></i> In
@@ -278,7 +346,8 @@
             <div><span class="trai">Phí ship: </span><span class="phai" id="invoiceShipping"></span></div>
             <div><span class="trai">Giảm giá: </span><span class="phai" id="invoiceDiscount"></span></div>
             <div><span class="trai">Đã thanh toán: </span><span class="phai" id="invoicePaid"></span></div>
-            <div><span class="trai">Còn phải thanh toán: </span><span class="phai" id="invoiceRemaining"></span></div>
+            <div><span class="trai">Còn phải thanh toán: </span><span class="phai" id="invoiceRemaining"></span>
+            </div>
 
         </div>
         <div><i style="font-weight: bold; font-size: 18px;">Ghi chú: <span id="invoiceghichu"></span> </i></div>
@@ -291,6 +360,7 @@
     </div>
 
     <div id="multiplePrintContainer"></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -323,6 +393,82 @@
                 })
             }).then(response => response.json());
         }
+
+        // Kiểm tra đăng nhập khi tải trang
+        function checkLoginStatus() {
+            const savedUsername = localStorage.getItem('username');
+            const savedToken = localStorage.getItem('loginToken');
+            if (savedUsername && savedToken) {
+                // Thực hiện kiểm tra token với server (nếu cần)
+                // Trong ví dụ này, chúng ta sẽ giả định token luôn hợp lệ
+                console.log('Auto login with saved credentials');
+                document.getElementById('username').value = savedUsername;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                loadData();
+            }
+        }
+
+        // Sửa đổi hàm login
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberLogin = document.getElementById('rememberLogin').checked;
+
+            try {
+                console.log('Attempting login for username:', username);
+                const result = await apiRequest('DSNV', 'Find', {
+                    Rows: [],
+                    Properties: {
+                        Selector: `Filter(DSNV, [username] = "${username}")`
+                    }
+                });
+
+                console.log('API response:', result);
+
+                if (result && Array.isArray(result) && result.length === 1) {
+                    const user = result[0];
+                    if (user.password === password) {
+                        console.log('Login successful');
+                        if (rememberLogin) {
+                            // Lưu thông tin đăng nhập
+                            localStorage.setItem('username', username);
+                            localStorage.setItem('loginToken', 'someTokenValue'); // Thay thế bằng token thực tế
+                        }
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                        loadData();
+                    } else {
+                        console.log('Login failed: Incorrect password');
+                        alert('Mật khẩu không đúng!');
+                    }
+                } else {
+                    console.log('Login failed: User not found');
+                    alert('Tên đăng nhập không tồn tại!');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert(`Lỗi đăng nhập: ${error.message || 'Không xác định'}. Vui lòng thử lại sau.`);
+            }
+
+            return false; // Ngăn form submit
+        }
+
+        // Thêm hàm đăng xuất
+        function logout() {
+            localStorage.removeItem('username');
+            localStorage.removeItem('loginToken');
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Đảm bảo form đăng nhập sử dụng hàm login đúng cách
+        document.getElementById('loginForm').onsubmit = function (event) {
+            event.preventDefault();
+            login();
+        };
 
         function loadData() {
             Promise.all([
@@ -653,7 +799,7 @@
 
         // Initialization
         window.onload = function () {
-            loadData();
+            checkLoginStatus();
             updatePaymentMethod();
 
             // Initialize tooltips
