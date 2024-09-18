@@ -199,10 +199,43 @@
         #loginForm button:hover {
             background-color: #0056b3;
         }
-        .form-check-input{
+
+        .form-check-input {
             width: 1.5rem;
             height: 1.5rem;
 
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
 
@@ -256,7 +289,9 @@
         </form>
     </div>
     <div id="mainContent" style="display: none;">
-
+        <div id="loadingSpinner" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner"></div>
+        </div>
         <div class="main-container">
             <div class="action-group ">
                 <div class="row g-3">
@@ -285,81 +320,81 @@
                         </select>
                     </div>
                     <div class="col-md-1">
-                    <button id="printSelectedBtn" class="btn btn-primary w-100" data-bs-toggle="tooltip"
-                        title="In đơn hàng đã chọn">
-                        <i class="bi bi-printer"></i> In
-                    </button>
+                        <button id="printSelectedBtn" class="btn btn-primary w-100" data-bs-toggle="tooltip"
+                            title="In đơn hàng đã chọn">
+                            <i class="bi bi-printer"></i> In
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="table-container animate__animated animate__fadeIn">
-            <table id="dataTable" class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th style="text-align: center; vertical-align: middle;"><input type="checkbox" id="selectAll"
-                                class="form-check-input"></th>
-                        <th style="text-align: center; vertical-align: middle;">Phiếu BH</th>
-                        <th style="text-align: center; vertical-align: middle;">Ngày order</th>
-                        <th style="text-align: center; vertical-align: middle;">Khách hàng</th>
-                        <th style="text-align: center; vertical-align: middle;">SĐT</th>
-                        <th style="text-align: center; vertical-align: middle;">Địa chỉ</th>
-                        <th style="text-align: center; vertical-align: middle;">Phí Ship</th>
-                        <th style="text-align: center; vertical-align: middle;">Tổng Tiền</th>
-                        <th style="text-align: center; vertical-align: middle;">Giảm giá</th>
-                        <th style="text-align: center; vertical-align: middle;">Còn Phải Thanh Toán</th>
-                        <th style="text-align: center; vertical-align: middle;">Nhân viên bán</th>
-                        <th style="text-align: center; vertical-align: middle;">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Dữ liệu sẽ được điền vào đây bởi JavaScript -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="invoiceTemplate" class="invoice-template">
-        <div class="invoice-header">
-            <div class="company-name"><strong> SHOP NHÀ NGỐ</strong></div>
-            <div><strong> CHUYÊN HÀNG XÁCH TAY THAILAND</strong></div>
-            <div><strong> ĐIA CHỈ: 21 LINH ĐƯỜNG,LINH ĐÀM.HN</strong></div>
-            <div>SĐT:0943 566 966</div>
-            <div>🏦 VP BANK: 113809086 Lê Bích Ngọc</div>
-        </div>
-        <div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
-        <div class="invoice-details">
-            <div>KHÁCH HÀNG: <span id="invoiceCustomerName"></span></div>
-            <div>SĐT: <span id="invoiceCustomerPhone"></span></div>
-            <div style="font-size: 12px;"><span id="invoiceCustomerAddress"></span></div>
-        </div>
-        <table class="invoice-table">
-            <tr>
-                <th>TÊN SP</th>
-                <th>SL</th>
-                <th style="text-align: right;">ĐƠN GIÁ</th>
-                <th style="text-align: right;">TỔNG TIỀN</th>
-            </tr>
-            <tbody id="invoiceItems"></tbody>
-        </table>
-        <div class="invoice-total">
-            <div><span class="trai">Tổng tiền: </span><span class="phai" id="invoiceTotal"></span></div>
-            <div><span class="trai">Phí ship: </span><span class="phai" id="invoiceShipping"></span></div>
-            <div><span class="trai">Giảm giá: </span><span class="phai" id="invoiceDiscount"></span></div>
-            <div><span class="trai">Đã thanh toán: </span><span class="phai" id="invoicePaid"></span></div>
-            <div><span class="trai">Còn phải thanh toán: </span><span class="phai" id="invoiceRemaining"></span>
+            <div class="table-container animate__animated animate__fadeIn">
+                <table id="dataTable" class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="text-align: center; vertical-align: middle;"><input type="checkbox"
+                                    id="selectAll" class="form-check-input"></th>
+                            <th style="text-align: center; vertical-align: middle;">Phiếu BH</th>
+                            <th style="text-align: center; vertical-align: middle;">Ngày order</th>
+                            <th style="text-align: center; vertical-align: middle;">Khách hàng</th>
+                            <th style="text-align: center; vertical-align: middle;">SĐT</th>
+                            <th style="text-align: center; vertical-align: middle;">Địa chỉ</th>
+                            <th style="text-align: center; vertical-align: middle;">Phí Ship</th>
+                            <th style="text-align: center; vertical-align: middle;">Tổng Tiền</th>
+                            <th style="text-align: center; vertical-align: middle;">Giảm giá</th>
+                            <th style="text-align: center; vertical-align: middle;">Còn Phải Thanh Toán</th>
+                            <th style="text-align: center; vertical-align: middle;">Nhân viên bán</th>
+                            <th style="text-align: center; vertical-align: middle;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dữ liệu sẽ được điền vào đây bởi JavaScript -->
+                    </tbody>
+                </table>
             </div>
-
         </div>
-        <div><i style="font-weight: bold; font-size: 18px;">Ghi chú: <span id="invoiceghichu"></span> </i></div>
-        <div class="invoice-footer">
-            <div id="accountInfo"></div>
-            <div id="qrCodeText">Thanh toán QR Code</div>
-            <div id="qrCodeContainer"></div>
-            <div>Cảm ơn Quý khách, hẹn gặp lại!</div>
-        </div>
-    </div>
 
-    <div id="multiplePrintContainer"></div>
+        <div id="invoiceTemplate" class="invoice-template">
+            <div class="invoice-header">
+                <div class="company-name"><strong> SHOP NHÀ NGỐ</strong></div>
+                <div><strong> CHUYÊN HÀNG XÁCH TAY THAILAND</strong></div>
+                <div><strong> ĐIA CHỈ: 21 LINH ĐƯỜNG,LINH ĐÀM.HN</strong></div>
+                <div>SĐT:0943 566 966</div>
+                <div>🏦 VP BANK: 113809086 Lê Bích Ngọc</div>
+            </div>
+            <div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
+            <div class="invoice-details">
+                <div>KHÁCH HÀNG: <span id="invoiceCustomerName"></span></div>
+                <div>SĐT: <span id="invoiceCustomerPhone"></span></div>
+                <div style="font-size: 12px;"><span id="invoiceCustomerAddress"></span></div>
+            </div>
+            <table class="invoice-table">
+                <tr>
+                    <th>TÊN SP</th>
+                    <th>SL</th>
+                    <th style="text-align: right;">ĐƠN GIÁ</th>
+                    <th style="text-align: right;">TỔNG TIỀN</th>
+                </tr>
+                <tbody id="invoiceItems"></tbody>
+            </table>
+            <div class="invoice-total">
+                <div><span class="trai">Tổng tiền: </span><span class="phai" id="invoiceTotal"></span></div>
+                <div><span class="trai">Phí ship: </span><span class="phai" id="invoiceShipping"></span></div>
+                <div><span class="trai">Giảm giá: </span><span class="phai" id="invoiceDiscount"></span></div>
+                <div><span class="trai">Đã thanh toán: </span><span class="phai" id="invoicePaid"></span></div>
+                <div><span class="trai">Còn phải thanh toán: </span><span class="phai" id="invoiceRemaining"></span>
+                </div>
+
+            </div>
+            <div><i style="font-weight: bold; font-size: 18px;">Ghi chú: <span id="invoiceghichu"></span> </i></div>
+            <div class="invoice-footer">
+                <div id="accountInfo"></div>
+                <div id="qrCodeText">Thanh toán QR Code</div>
+                <div id="qrCodeContainer"></div>
+                <div>Cảm ơn Quý khách, hẹn gặp lại!</div>
+            </div>
+        </div>
+
+        <div id="multiplePrintContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -431,12 +466,13 @@
                     if (user.password === password) {
                         console.log('Login successful');
                         if (rememberLogin) {
-                            // Lưu thông tin đăng nhập
                             localStorage.setItem('username', username);
-                            localStorage.setItem('loginToken', 'someTokenValue'); // Thay thế bằng token thực tế
+                            localStorage.setItem('loginToken', 'someTokenValue');
                         }
                         document.getElementById('loginForm').style.display = 'none';
                         document.getElementById('mainContent').style.display = 'block';
+                        // Show loading spinner before loading data
+                        document.getElementById('loadingSpinner').style.display = 'flex';
                         loadData();
                     } else {
                         console.log('Login failed: Incorrect password');
@@ -459,6 +495,7 @@
             localStorage.removeItem('username');
             localStorage.removeItem('loginToken');
             document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'none';
             document.getElementById('loginForm').style.display = 'flex';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
@@ -471,6 +508,10 @@
         };
 
         function loadData() {
+            // Show loading spinner
+            document.getElementById('loadingSpinner').style.display = 'flex';
+            document.querySelector('.main-container').style.display = 'none';
+
             Promise.all([
                 apiRequest('Bán hàng', 'Find', { Rows: [], Properties: { Selector: 'Filter(Bán hàng, [Trạng thái]="Chốt order")' } }),
                 apiRequest('Chi tiết bán hàng', 'Find', { Rows: [], Properties: { Selector: 'Filter(Chi tiết bán hàng, true)' } })
@@ -479,8 +520,15 @@
                 filteredData = allData;
                 chiTietData = chiTietBanHangData;
                 initializeDataTable();
+
+                // Hide loading spinner and show main container
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.querySelector('.main-container').style.display = 'flex';
             }).catch(error => {
                 console.error('Error loading data:', error);
+                // Hide loading spinner and show error message
+                document.getElementById('loadingSpinner').style.display = 'none';
+                alert('Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.');
             });
         }
 
@@ -666,6 +714,7 @@
 
         function printMultipleInvoices(selectedOrders) {
             const printContainer = document.getElementById('multiplePrintContainer');
+            const mainContainer = document.querySelector('.main-container');
             printContainer.innerHTML = '';
 
             selectedOrders.forEach((order, index) => {
@@ -675,7 +724,6 @@
 
                 fillInvoiceTemplate(invoiceTemplate, order);
 
-                // Chỉ thêm page break nếu không phải là đơn hàng cuối cùng và có nhiều hơn một đơn hàng
                 if (index < selectedOrders.length - 1 && selectedOrders.length > 1) {
                     invoiceTemplate.style.pageBreakAfter = 'always';
                 }
@@ -683,17 +731,53 @@
                 printContainer.appendChild(invoiceTemplate);
             });
 
-            document.querySelector('.main-container').style.display = 'none';
+            mainContainer.style.display = 'none';
             printContainer.style.display = 'block';
 
+            let printInitiated = false;
+            let printFinished = false;
+
+            const mediaQueryList = window.matchMedia('print');
+
+            const handlePrintChange = (mql) => {
+                if (mql.matches) {
+                    printInitiated = true;
+                } else if (printInitiated) {
+                    printFinished = true;
+                    finishPrintProcess();
+                }
+            };
+
+            mediaQueryList.addListener(handlePrintChange);
+
+            const finishPrintProcess = () => {
+                mediaQueryList.removeListener(handlePrintChange);
+                mainContainer.style.display = 'flex';
+                printContainer.style.display = 'none';
+                printContainer.innerHTML = '';
+            };
+
+            // Bắt đầu quá trình in sau một khoảng thời gian ngắn
             setTimeout(() => {
                 window.print();
+
+                // Kiểm tra sau một khoảng thời gian nếu in chưa được bắt đầu
                 setTimeout(() => {
-                    document.querySelector('.main-container').style.display = 'flex';
-                    printContainer.style.display = 'none';
-                    printContainer.innerHTML = '';
-                }, 100);
+                    if (!printInitiated) {
+                        console.log("In bị hủy hoặc không bắt đầu");
+                        finishPrintProcess();
+                    }
+                }, 1000); // Đợi 1 giây
+
             }, 500);
+
+            // Đặt một timeout dài hơn để đảm bảo quay lại màn hình chính trong mọi trường hợp
+            setTimeout(() => {
+                if (!printFinished) {
+                    console.log("Quá trình in kéo dài quá lâu hoặc bị treo");
+                    finishPrintProcess();
+                }
+            }, 10000); // Đợi tối đa 10 giây
         }
 
         function fillInvoiceTemplate(template, order) {
@@ -813,5 +897,4 @@
         $(window).resize(adjustTableHeight);
     </script>
 </body>
-
 </html>
