@@ -73,6 +73,7 @@
             margin: 20px auto;
             background: white;
             font-size: 12px;
+            box-sizing: content-box;
         }
 
         .invoice-header {
@@ -111,7 +112,7 @@
         }
 
         .invoice-total {
-            margin: 10px;
+            margin-top: 10px;
             font-size: 12px;
             line-height: 1.2;
             font-weight: 600;
@@ -130,7 +131,8 @@
         }
 
         .invoice-footer {
-            margin-top: 20px;
+            margin-top: 10px;
+            font-size: 10px;
             text-align: center;
         }
 
@@ -148,6 +150,12 @@
             color: white !important;
         }
 
+        .qr-code-image {
+            width: 110px;
+            height: 110px;
+        }
+
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact !important;
@@ -161,8 +169,6 @@
             }
 
             .invoice-template {
-                font-size: 12pt;
-                line-height: 1.2;
                 color: black;
             }
 
@@ -180,6 +186,7 @@
                 page-break-after: avoid;
                 page-break-inside: avoid;
             }
+
 
         }
     </style>
@@ -255,11 +262,11 @@
         <div class="invoice-details">
             <div>KHÁCH HÀNG: <span id="invoiceCustomerName"></span></div>
             <div>SĐT: <span id="invoiceCustomerPhone"></span></div>
-            <div><span id="invoiceCustomerAddress"></span></div>
+            <div style="font-size: 12px;"><span id="invoiceCustomerAddress"></span></div>
         </div>
         <table class="invoice-table">
             <tr>
-                <th class="cotten">TÊN SP</th>
+                <th>TÊN SP</th>
                 <th>SL</th>
                 <th style="text-align: right;">ĐƠN GIÁ</th>
                 <th style="text-align: right;">TỔNG TIỀN</th>
@@ -272,8 +279,9 @@
             <div><span class="trai">Giảm giá: </span><span class="phai" id="invoiceDiscount"></span></div>
             <div><span class="trai">Đã thanh toán: </span><span class="phai" id="invoicePaid"></span></div>
             <div><span class="trai">Còn phải thanh toán: </span><span class="phai" id="invoiceRemaining"></span></div>
-            <div><span>Ghi chú: </span><span id="invoiceghichu"></span></div>
+
         </div>
+        <div><span style="font-weight: bold; font-size: 18px;">Ghi chú: </span><span id="invoiceghichu"></span></div>
         <div class="invoice-footer">
             <div id="accountInfo"></div>
             <div id="qrCodeText">Thanh toán QR Code</div>
@@ -416,7 +424,7 @@
             const invoiceTemplate = document.getElementById('invoiceTemplate');
 
             document.getElementById('invoiceCustomerName').textContent = order['Khách hàng'];
-            document.getElementById('invoiceCustomerPhone').textContent = order.SĐT;
+            document.getElementById('invoiceCustomerPhone').textContent = maskPhoneNumber(order.SĐT);
             document.getElementById('invoiceCustomerAddress').textContent = order['Địa chỉ'];
             document.getElementById('invoiceTotal').textContent = formatCurrency(order['Tổng tiền']);
             document.getElementById('invoiceShipping').textContent = formatCurrency(order['Phí ship']);
@@ -455,6 +463,13 @@
                 invoiceTemplate.removeChild(backButton);
             };
             invoiceTemplate.appendChild(backButton);
+        }
+        function maskPhoneNumber(phoneNumber) {
+            if (!phoneNumber) return '';
+            if (!/^\d{10}$/.test(phoneNumber)) {
+                return phoneNumber;
+            }
+            return phoneNumber.replace(/^(\d{3})\d+(\d{2})$/, '$1xxx$2');
         }
 
         function updatePaymentMethod() {
@@ -495,8 +510,7 @@
                 const qrCodeImg = document.createElement('img');
                 qrCodeImg.src = qrCodeUrl;
                 qrCodeImg.alt = "QR Code";
-                qrCodeImg.style.width = "110px";
-                qrCodeImg.style.height = "110px";
+                qrCodeImg.className = "qr-code-image";
                 qrCodeContainer.innerHTML = '';
                 qrCodeContainer.appendChild(qrCodeImg);
             } else {
@@ -538,7 +552,7 @@
 
         function fillInvoiceTemplate(template, order) {
             template.querySelector('#invoiceCustomerName').textContent = order['Khách hàng'];
-            template.querySelector('#invoiceCustomerPhone').textContent = order.SĐT;
+            template.querySelector('#invoiceCustomerPhone').textContent = maskPhoneNumber(order.SĐT);
             template.querySelector('#invoiceCustomerAddress').textContent = order['Địa chỉ'];
             template.querySelector('#invoiceTotal').textContent = formatCurrency(order['Tổng tiền']);
             template.querySelector('#invoiceShipping').textContent = formatCurrency(order['Phí ship']);
