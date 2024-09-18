@@ -595,15 +595,72 @@
         .ten_sanpham {
             font-weight: 600;
         }
+
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        #loginForm form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        #loginForm h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        #loginForm input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #loginForm button {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #loginForm button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 
 <body>
+    <div id="loginForm">
+        <form onsubmit="return login()">
+            <h2>Đăng nhập</h2>
+            <input type="text" id="username" placeholder="Tên đăng nhập" required>
+            <input type="password" id="password" placeholder="Mật khẩu" required>
+            <div style="margin-bottom: 1rem;">
+                <input type="checkbox" id="rememberLogin" style=" width: 30px;">
+                <label for="rememberLogin">Ghi nhớ đăng nhập</label>
+            </div>
+            <button type="submit">Đăng nhập</button>
+        </form>
+    </div>
 
-    <main>
+    <main id="mainContent" style="display: none;">
 
         <!-- Cập nhật phần HTML trong .search-filter -->
         <div class="search-filter">
+            
             <input type="text" id="searchInput" placeholder="Tìm kiếm...">
             <div class="filter-group">
                 <select id="groupFilter">
@@ -627,6 +684,7 @@
                     <span class="slider round"></span>
                 </label>
                 <button id="refreshButton" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
+                <button id="logoutButton" class="refresh-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </div>
 
@@ -673,6 +731,73 @@
                 })
             });
         }
+
+        function checkLoginStatus() {
+            const savedUsername = localStorage.getItem('username');
+            const savedToken = localStorage.getItem('loginToken');
+            if (savedUsername && savedToken) {
+                document.getElementById('username').value = savedUsername;
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                initializeReport();
+            } else {
+                document.getElementById('loginForm').style.display = 'flex';
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberLogin = document.getElementById('rememberLogin').checked;
+
+            try {
+                const result = await apiRequest('DSNV', 'Find', {
+                    Rows: [],
+                    Properties: {
+                        Selector: `Filter(DSNV, [username] = "${username}")`
+                    }
+                });
+
+                if (result && Array.isArray(result) && result.length === 1) {
+                    const user = result[0];
+                    if (user.password === password) {
+                        if (rememberLogin) {
+                            localStorage.setItem('username', username);
+                            localStorage.setItem('loginToken', 'someTokenValue');
+                        }
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                        initializeReport();
+                    } else {
+                        alert('Mật khẩu không đúng!');
+                    }
+                } else {
+                    alert('Tên đăng nhập không tồn tại!');
+                }
+            } catch (error) {
+                console.error('Lỗi đăng nhập:', error);
+                alert(`Lỗi đăng nhập: ${error.message || 'Không xác định'}. Vui lòng thử lại sau.`);
+            }
+
+            return false;
+        }
+
+        function logout() {
+            localStorage.removeItem('username');
+            localStorage.removeItem('loginToken');
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+         // Đảm bảo form đăng nhập sử dụng hàm login đúng cách
+         document.getElementById('loginForm').onsubmit = function (event) {
+            event.preventDefault();
+            login();
+        };
+
+
 
         function saveDataToLocalStorage() {
             localStorage.setItem('purchaseReportData', JSON.stringify(allData));
@@ -993,55 +1118,55 @@
             });
         }
         function exportToExcel() {
-    const vietnamTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-    const formattedDate = vietnamTime.toLocaleDateString('vi-VN');
+            const vietnamTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+            const formattedDate = vietnamTime.toLocaleDateString('vi-VN');
 
-    // Định nghĩa tên cột
-    const columns = [
-        { header: 'STT', key: 'STT', width: 5 },
-        { header: 'SKU', key: 'SKU', width: 15 },
-        { header: 'Nhóm', key: 'Nhóm', width: 15 },
-        { header: 'Tên Sản Phẩm', key: 'TenSanPham', width: 30 },
-        { header: 'Cần mua', key: 'CanMua', width: 10 },
-        { header: 'Đã mua', key: 'DaMua', width: 10 },
-        { header: 'Còn lại', key: 'ConLai', width: 10 },
-        { header: 'Ghi chú', key: 'GhiChu', width: 20 }
-    ];
+            // Định nghĩa tên cột
+            const columns = [
+                { header: 'STT', key: 'STT', width: 5 },
+                { header: 'SKU', key: 'SKU', width: 15 },
+                { header: 'Nhóm', key: 'Nhóm', width: 15 },
+                { header: 'Tên Sản Phẩm', key: 'TenSanPham', width: 30 },
+                { header: 'Cần mua', key: 'CanMua', width: 10 },
+                { header: 'Đã mua', key: 'DaMua', width: 10 },
+                { header: 'Còn lại', key: 'ConLai', width: 10 },
+                { header: 'Ghi chú', key: 'GhiChu', width: 20 }
+            ];
 
-    const dataToExport = filteredData.map((item, index) => ({
-        'STT': index + 1,
-        'SKU': item['SKU'],
-        'Nhóm': item['Nhóm Sản Phẩm'],
-        'TenSanPham': item['Tên sản phẩm'],
-        'CanMua': item['Số lượng cần mua'],
-        'DaMua': item.daMua,
-        'ConLai': item['Số lượng cần mua'] - item.daMua,
-        'GhiChu': item.ghiChu || ''
-    }));
+            const dataToExport = filteredData.map((item, index) => ({
+                'STT': index + 1,
+                'SKU': item['SKU'],
+                'Nhóm': item['Nhóm Sản Phẩm'],
+                'TenSanPham': item['Tên sản phẩm'],
+                'CanMua': item['Số lượng cần mua'],
+                'DaMua': item.daMua,
+                'ConLai': item['Số lượng cần mua'] - item.daMua,
+                'GhiChu': item.ghiChu || ''
+            }));
 
-    // Tạo một workbook mới và một worksheet
-    const wb = XLSX.utils.book_new();
-    
-    // Tạo mảng dữ liệu bao gồm cả tiêu đề
-    const wsData = [
-        columns.map(col => col.header),
-        ...dataToExport.map(item => columns.map(col => item[col.key]))
-    ];
-    
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
+            // Tạo một workbook mới và một worksheet
+            const wb = XLSX.utils.book_new();
 
-    // Thiết lập chiều rộng cột
-    ws['!cols'] = columns.map(col => ({ wch: col.width }));
+            // Tạo mảng dữ liệu bao gồm cả tiêu đề
+            const wsData = [
+                columns.map(col => col.header),
+                ...dataToExport.map(item => columns.map(col => item[col.key]))
+            ];
 
-    // Thêm worksheet vào workbook
-    XLSX.utils.book_append_sheet(wb, ws, "Báo cáo mua hàng");
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Tạo tên file
-    const fileName = `bao-cao-mua-hang-${formattedDate.replace(/\//g, '-')}.xlsx`;
+            // Thiết lập chiều rộng cột
+            ws['!cols'] = columns.map(col => ({ wch: col.width }));
 
-    // Xuất file
-    XLSX.writeFile(wb, fileName);
-}
+            // Thêm worksheet vào workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Báo cáo mua hàng");
+
+            // Tạo tên file
+            const fileName = `bao-cao-mua-hang-${formattedDate.replace(/\//g, '-')}.xlsx`;
+
+            // Xuất file
+            XLSX.writeFile(wb, fileName);
+        }
 
         function generatePDF() {
             const vietnamTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
@@ -1095,7 +1220,7 @@
         }
 
         $(document).ready(function () {
-            initializeReport();
+            checkLoginStatus();
 
             $('#searchInput, #groupFilter, #statusFilter, #hidePurchasedItems').on('input change', function () {
                 currentPage = 1;
@@ -1147,6 +1272,12 @@
 
             $('#exportExcel').click(function () {
                 exportToExcel();
+            });
+
+            $('#logoutButton').click(function () {
+                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                    logout();
+                }
             });
         });
     </script>
