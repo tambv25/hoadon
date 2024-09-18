@@ -28,7 +28,7 @@
         td {
             border-top: 0px solid rgb(118 116 116);
             border-bottom: 0.5px solid rgb(118 116 116);
-            padding: 1mm;
+            padding: 1mm 0.5mm;
             text-align: left;
         }
 
@@ -207,14 +207,16 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbwQw06Pz472ZAU7hokagdIgDC3Zgb8EdBYDX5Lt0ei_gHx7kw-4Wi25rBQHouy_m06dRw/exec';
         var BAN_GIAO = {};
         var CT_BANGIAO = [];
-
+        var pageFullyLoaded = false;
+    
         function showLoading() {
             document.getElementById('loading-screen').style.display = 'flex';
         }
-
+    
         function hideLoading() {
             document.getElementById('loading-screen').style.display = 'none';
         }
+    
         function searchContract(SOBH) {
             showLoading();
             fetch(`${API_URL}?SOBH=${encodeURIComponent(SOBH)}`)
@@ -224,6 +226,8 @@
                         BAN_GIAO = data.ctuResult || {};
                         CT_BANGIAO = data.originalTsDetailResult || [];
                         updateUI();
+                        pageFullyLoaded = true;
+                        triggerPrint();
                     } else {
                         console.error('Lỗi:', data.message);
                     }
@@ -233,6 +237,7 @@
                 })
                 .finally(hideLoading);
         }
+    
         function updateUI() {
             document.getElementById('sodtkh').textContent = maskPhoneNumber(BAN_GIAO['SĐT'] || '');
             document.getElementById('tenkh').textContent = BAN_GIAO['Khách hàng'] || '';
@@ -243,24 +248,24 @@
             document.getElementById('conlai').textContent = formatCurrency(BAN_GIAO['Còn phải thanh toán'] || '0');
             document.getElementById('phiShip').textContent = formatCurrency(BAN_GIAO['Phí ship'] || '0');
             document.getElementById('ghiChu').textContent = BAN_GIAO['Ghi chú'] || '';
-
-            updateProductTable(); updatePaymentMethod();
+    
+            updateProductTable();
+            updatePaymentMethod();
         }
+    
         function maskPhoneNumber(phoneNumber) {
             if (!phoneNumber) return '';
-            // Kiểm tra xem số điện thoại có đúng định dạng không (10 chữ số)
             if (!/^\d{10}$/.test(phoneNumber)) {
-                return phoneNumber; // Trả về số điện thoại nguyên bản nếu không đúng định dạng
+                return phoneNumber;
             }
-            // Giữ lại 3 số đầu và 2 số cuối, thay thế phần còn lại bằng 'xxx'
             return phoneNumber.replace(/^(\d{3})\d+(\d{2})$/, '$1xxx$2');
         }
+    
         function updateProductTable() {
             const tableBody = document.getElementById('orderDetailsBody');
             tableBody.innerHTML = '';
-
+    
             if (Array.isArray(CT_BANGIAO) && CT_BANGIAO.length > 0) {
-                // Nhóm dữ liệu theo Tên sản phẩm
                 const groupedData = CT_BANGIAO.reduce((acc, item) => {
                     const key = item['Tên sản phẩm'] || '';
                     if (!acc[key]) {
@@ -270,25 +275,22 @@
                     acc[key]['Thành tiền'] += Number(item['Thành tiền'] || 0);
                     return acc;
                 }, {});
-
-                // Hiển thị dữ liệu đã được nhóm
+    
                 Object.values(groupedData).forEach(item => {
                     const row = tableBody.insertRow();
                     row.innerHTML = `
-                <td>${item['Tên sản phẩm'] || ''}</td>
-                <td style="text-align: center;">${item['Số lượng'] || ''}</td>
-                <td style="text-align: center;">${formatCurrency(item['Đơn giá'] || '')}</td>
-                <td style="text-align: right;">${formatCurrency(item['Thành tiền'] || '')}</td>
-            `;
+                        <td>${item['Tên sản phẩm'] || ''}</td>
+                        <td style="text-align: center;">${item['Số lượng'] || ''}</td>
+                        <td style="text-align: center;">${formatCurrency(item['Đơn giá'] || '')}</td>
+                        <td style="text-align: right;">${formatCurrency(item['Thành tiền'] || '')}</td>
+                    `;
                 });
             } else {
                 tableBody.innerHTML = '<tr><td colspan="4">Không có dữ liệu</td></tr>';
             }
         }
-
-
+    
         function getPaperSizeInMM(size) {
-            //thêm các loại siiz ơ day
             const height = calculatePageHeight();
             switch (size) {
                 case '80mm':
@@ -303,10 +305,12 @@
                     return [80, height];
             }
         }
+    
         function calculatePageHeight() {
             const content = document.getElementById('content');
             return content.scrollHeight;
         }
+    
         function applyPaperSize(size) {
             const height = calculatePageHeight();
             var style = document.createElement('style');
@@ -324,21 +328,18 @@
             style.id = 'print-style';
             document.head.appendChild(style);
         }
-        document.getElementById('paper-size').addEventListener('change', function () {
-            applyPaperSize(this.value);
-        });
-
+    
         function printInvoice() {
             var selectedSize = document.getElementById('paper-size').value;
             applyPaperSize(selectedSize);
             window.print();
         }
-
+    
         function updatePaymentMethod() {
             const paymentMethod = document.getElementById('payment-method').value;
             const accountSelect = document.getElementById('accountSelect');
             const qrCodeContainer = document.querySelector('.footer');
-
+    
             if (paymentMethod === 'transfer') {
                 accountSelect.style.display = 'block';
                 qrCodeContainer.style.display = 'block';
@@ -348,13 +349,12 @@
                 qrCodeContainer.style.display = 'none';
             }
         }
-
+    
         function updateAccountInfo() {
             const accountSelect = document.getElementById('accountSelect');
             const selectedAccount = accountSelect.options[accountSelect.selectedIndex];
             const accountInfo = selectedAccount.text;
-
-            // Cập nhật thông tin tài khoản trong phần footer
+    
             const footerAccountInfo = document.createElement('div');
             footerAccountInfo.textContent = accountInfo;
             const footer = document.querySelector('.footer');
@@ -365,14 +365,10 @@
                 footer.insertBefore(footerAccountInfo, footer.firstChild);
             }
             footerAccountInfo.className = 'account-info';
-
+    
             updateQRCode();
         }
-
-        // Thêm event listener cho select payment-method
-        document.getElementById('payment-method').addEventListener('change', updatePaymentMethod);
-        document.getElementById('accountSelect').addEventListener('change', updateAccountInfo);
-
+    
         function updateQRCode() {
             const paymentMethod = document.getElementById('payment-method').value;
             if (paymentMethod === 'transfer') {
@@ -382,27 +378,26 @@
                 const bankInfo = selectedAccount.text.split(':')[0].trim();
                 const accountNumber = selectedAccount.text.split(':')[1].split('-')[0].trim();
                 const accountName = selectedAccount.text.split('-')[1].trim();
-
+    
                 const qrCodeUrl = `https://img.vietqr.io/image/${bankInfo}-${accountNumber}-compact.png?amount=${amount}&addInfo=Thanh toan don hang&accountName=${encodeURIComponent(accountName)}`;
                 document.getElementById('qrCodeImage').src = qrCodeUrl;
             }
         }
-
+    
         function formatCurrency(value) {
             if (!value) return '0';
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
                 .format(value)
-                .replace('₫', '')  // Loại bỏ ký tự đồng
-                .trim();  // Loại bỏ khoảng trắng thừa nếu có
+                .replace('₫', '')
+                .trim();
         }
+    
         function exportToPDF() {
             var element = document.getElementById('content');
             var selectedSize = document.getElementById('paper-size').value;
-
-            // Áp dụng kích thước trang được chọn
+    
             applyPaperSize(selectedSize);
-
-            // Đợi một chút để đảm bảo các thay đổi được áp dụng
+    
             setTimeout(() => {
                 html2canvas(element, {
                     scale: 2,
@@ -421,19 +416,28 @@
                         pdf = new jspdf.jsPDF({
                             orientation: 'portrait',
                             unit: 'mm',
-                            format: [80, element.scrollHeight * 0.264583] // convert pixels to mm
+                            format: [80, element.scrollHeight * 0.264583]
                         });
                     }
-
+    
                     var pdfWidth = pdf.internal.pageSize.getWidth();
                     var pdfHeight = pdf.internal.pageSize.getHeight();
                     var ratio = pdfWidth / canvas.width;
-
+    
                     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width * ratio, canvas.height * ratio);
                     pdf.save(BAN_GIAO['Khách hàng'] + BAN_GIAO['Ngày bán'] + ".pdf");
                 });
-            }, 500); // Đợi 500ms
+            }, 500);
         }
+    
+        function triggerPrint() {
+            if (pageFullyLoaded) {
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            }
+        }
+    
         document.addEventListener('DOMContentLoaded', function () {
             updatePaymentMethod();
             const urlParams = new URLSearchParams(window.location.search);
@@ -444,22 +448,22 @@
                 console.error('Vui lòng cung cấp số hóa đơn trong URL (ví dụ: ?SOBH=HD001)');
                 hideLoading();
             }
-
-
-
-        });
-        document.addEventListener('DOMContentLoaded', function () {
+    
+            document.getElementById('paper-size').addEventListener('change', function () {
+                applyPaperSize(this.value);
+            });
+    
+            document.getElementById('payment-method').addEventListener('change', updatePaymentMethod);
+            document.getElementById('accountSelect').addEventListener('change', updateAccountInfo);
+    
             const printOptions = document.getElementById('print-options');
-            const content = document.getElementById('content');
             let lastScrollTop = 0;
-
+    
             window.addEventListener('scroll', function () {
                 let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
                 if (scrollTop > lastScrollTop) {
-                    // Scrolling down
                     printOptions.style.transform = 'translateY(-100%)';
                 } else {
-                    // Scrolling up
                     printOptions.style.transform = 'translateY(0)';
                 }
                 lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
