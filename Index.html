@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -239,7 +240,7 @@
         }
     
         function updateUI() {
-            document.getElementById('sodtkh').textContent = maskPhoneNumber(BAN_GIAO['SĐT'] || '');
+            document.getElementById('sodtkh').textContent = BAN_GIAO['SĐT'] || '';
             document.getElementById('tenkh').textContent = BAN_GIAO['Khách hàng'] || '';
             document.getElementById('chinhanh').textContent = BAN_GIAO['Địa chỉ'] || '';
             document.getElementById('tongGiaTri').textContent = formatCurrency(BAN_GIAO['Tổng tiền'] || '0');

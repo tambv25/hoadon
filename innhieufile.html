@@ -618,7 +618,7 @@
             const invoiceTemplate = document.getElementById('invoiceTemplate');
 
             document.getElementById('invoiceCustomerName').textContent = order['Khách hàng'];
-            document.getElementById('invoiceCustomerPhone').textContent = maskPhoneNumber(order.SĐT);
+            document.getElementById('invoiceCustomerPhone').textContent = order.SĐT;
             document.getElementById('invoiceCustomerAddress').textContent = order['Địa chỉ'];
             document.getElementById('invoiceTotal').textContent = formatCurrency(order['Tổng tiền']);
             document.getElementById('invoiceShipping').textContent = formatCurrency(order['Phí ship']);
@@ -782,7 +782,7 @@
 
         function fillInvoiceTemplate(template, order) {
             template.querySelector('#invoiceCustomerName').textContent = order['Khách hàng'];
-            template.querySelector('#invoiceCustomerPhone').textContent = maskPhoneNumber(order.SĐT);
+            template.querySelector('#invoiceCustomerPhone').textContent = order.SĐT;
             template.querySelector('#invoiceCustomerAddress').textContent = order['Địa chỉ'];
             template.querySelector('#invoiceTotal').textContent = formatCurrency(order['Tổng tiền']);
             template.querySelector('#invoiceShipping').textContent = formatCurrency(order['Phí ship']);
