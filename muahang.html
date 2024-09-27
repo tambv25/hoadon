@@ -639,6 +639,51 @@
         #loginForm button:hover {
             background-color: #0056b3;
         }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .disabled-btn {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -660,7 +705,7 @@
 
         <!-- Cập nhật phần HTML trong .search-filter -->
         <div class="search-filter">
-            
+
             <input type="text" id="searchInput" placeholder="Tìm kiếm...">
             <div class="filter-group">
                 <select id="groupFilter">
@@ -675,16 +720,18 @@
                 </select>
             </div>
             <div class="toggle-container">
-                <button id="saveFilteredData" class="refresh-btn"><i class="fas fa-save"></i>
-                </button>
+
+                <!-- <button id="logoutButton" class="refresh-btn"><i class="fas fa-sign-out-alt"></i></button> -->
+                <button id="refreshButton" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
                 <button id="exportPDF" class="refresh-btn"><i class="fas fa-print"></i></button>
                 <button id="exportExcel" class="refresh-btn"><i class="fas fa-file-excel"></i></button>
                 <label class="switch">
                     <input type="checkbox" id="hidePurchasedItems" checked>
                     <span class="slider round"></span>
                 </label>
-                <button id="refreshButton" class="refresh-btn"><i class="fas fa-sync-alt"></i></button>
-                <button id="logoutButton" class="refresh-btn"><i class="fas fa-sign-out-alt"></i></button>
+
+
+                <button id="saveFilteredData" class="refresh-btn"><i class="fas fa-save"></i></button>
             </div>
         </div>
 
@@ -761,9 +808,11 @@
                 if (result && Array.isArray(result) && result.length === 1) {
                     const user = result[0];
                     if (user.password === password) {
+                        localStorage.setItem('tenNhanVien', user['Tên nhân viên']);
                         if (rememberLogin) {
                             localStorage.setItem('username', username);
                             localStorage.setItem('loginToken', 'someTokenValue');
+
                         }
                         document.getElementById('loginForm').style.display = 'none';
                         document.getElementById('mainContent').style.display = 'block';
@@ -791,8 +840,8 @@
             document.getElementById('password').value = '';
         }
 
-         // Đảm bảo form đăng nhập sử dụng hàm login đúng cách
-         document.getElementById('loginForm').onsubmit = function (event) {
+        // Đảm bảo form đăng nhập sử dụng hàm login đúng cách
+        document.getElementById('loginForm').onsubmit = function (event) {
             event.preventDefault();
             login();
         };
@@ -803,9 +852,10 @@
             localStorage.setItem('purchaseReportData', JSON.stringify(allData));
         }
 
+
         function loadDataFromLocalStorage() {
-            const savedData = localStorage.getItem('purchaseReportData');
-            return savedData ? JSON.parse(savedData) : null;
+            const duLieuDaLuu = localStorage.getItem('purchaseReportData');
+            return duLieuDaLuu ? JSON.parse(duLieuDaLuu) : null;
         }
 
         async function fetchCombinedData() {
@@ -844,55 +894,56 @@
 
         function createTableHTML(data) {
             let tableHTML = `
-        <div style="overflow-x: auto;">
-            <table id="purchaseTable">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Hình Ảnh</th>
-                        <th class="tenhanhhoa">Tên Hàng Hóa</th>
-                        <th>Hành động</th>
-                        <th>Trạng thái</th>
-                        <th>Ghi Chú</th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div style="overflow-x: auto;">
+        <table id="purchaseTable">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Hình Ảnh</th>
+                    <th class="tenhanhhoa">Tên Hàng Hóa</th>
+                    <th>Hành động</th>
+                    <th>Trạng thái</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
     `;
 
             data.forEach((item, index) => {
                 const conLai = item['Số lượng cần mua'] - item.daMua;
                 const statusClass = item.trangThai.toLowerCase().replace(' ', '-');
                 const hiddenClass = item.trangThai === 'Đã mua' && $('#hidePurchasedItems').is(':checked') ? 'hidden-row' : '';
+                const disabledClass = item.daMua > 0 ? 'disabled-btn' : '';
 
                 tableHTML += `
-            <tr class="${hiddenClass}">
-                <td>${index + 1}</td>
-                <td><img src="https://www.appsheet.com/template/gettablefileurl?appName=App_ShopNhaNgo_V280824-2154080&tableName=${SHEET_NAME_2}&fileName=${encodeURIComponent(item['Ảnh sản phẩm'])}" alt="Ảnh" class="zoomable-image"></td>
-                <td class="ten_sanpham">${item['Tên sản phẩm'] || ''}
-                
-                    <div class="quantity-group">
-                        
-                        <div class="quantity-control">
-                            <span class="quantity-needed">${item['Số lượng cần mua'] || 0} </span>
-                            <input type="number" class="quantity-input" value="${item.daMua}" min="0" onchange="updateQuantity(this, ${index})">
-                            <span class="quantity-remaining">${conLai}</span>
-                        </div>
-                        
+        <tr class="${hiddenClass}">
+            <td>${index + 1}</td>
+            <td><img src="https://www.appsheet.com/template/gettablefileurl?appName=App_ShopNhaNgo_V280824-2154080&tableName=${SHEET_NAME_2}&fileName=${encodeURIComponent(item['Ảnh sản phẩm'])}" alt="Ảnh" class="zoomable-image"></td>
+            <td class="ten_sanpham">${item['Tên sản phẩm'] || ''}
+            
+                <div class="quantity-group">
+                    
+                    <div class="quantity-control">
+                        <span class="quantity-needed">${item['Số lượng cần mua'] || 0} </span>
+                        <input type="number" class="quantity-input" value="${item.daMua}" min="0" onchange="updateQuantity(this, ${index})">
+                        <span class="quantity-remaining">${conLai}</span>
                     </div>
-                </td>
-                <td><button class="buy-btn" data-index="${index}">Mua</button></td>
-                <td>
-                    <span class="status-label ${statusClass}">${item.trangThai}</span>
-                </td>
-                <td><input type="text" value="${item.ghiChu}" onchange="updateNote(this, ${index})"></td>
-            </tr>
-        `;
+                    
+                </div>
+            </td>
+            <td><button class="buy-btn ${disabledClass}" data-index="${index}">Mua</button></td>
+            <td>
+                <span class="status-label ${statusClass}">${item.trangThai}</span>
+            </td>
+            <td><input type="text" value="${item.ghiChu}" onchange="updateNote(this, ${index})"></td>
+        </tr>
+    `;
             });
 
             tableHTML += `
-                </tbody>
-            </table>
-        </div>
+            </tbody>
+        </table>
+    </div>
     `;
 
             return tableHTML;
@@ -900,16 +951,23 @@
 
         function updateQuantity(input, index) {
             const value = parseInt($(input).val()) || 0;
-            const item = filteredData[index];
+
+            // Tính chỉ số gốc (global index) của sản phẩm dựa trên trang hiện tại
+            const globalIndex = (currentPage - 1) * itemsPerPage + index;
+
+            const item = filteredData[globalIndex]; // Sử dụng chỉ số chính xác của sản phẩm
             const originalIndex = allData.findIndex(d => d.SKU === item.SKU);
             const canMua = parseInt(item['Số lượng cần mua']) || 0;
 
+            // Cập nhật số lượng mua
             item.daMua = value;
             allData[originalIndex].daMua = value;
 
+            // Tính số còn lại
             const remaining = canMua - value;
             $(input).closest('tr').find('.quantity-group span:last-child').text(remaining);
 
+            // Cập nhật trạng thái mới dựa trên số lượng mua
             let newStatus;
             if (value === 0) {
                 newStatus = 'Chưa mua';
@@ -924,15 +982,23 @@
             item.trangThai = newStatus;
             allData[originalIndex].trangThai = newStatus;
 
+            // Cập nhật giao diện trạng thái
             const statusLabel = $(input).closest('tr').find('.status-label');
             statusLabel.text(newStatus);
             statusLabel.removeClass('chua-mua dang-mua da-mua vuot-so-luong');
             statusLabel.addClass(newStatus.toLowerCase().replace(' ', '-'));
 
-            saveDataToLocalStorage();
+            // Vô hiệu hóa nút "Mua" nếu số lượng mua > 0
+            const buyButton = $(input).closest('tr').find('.buy-btn');
+            if (value > 0) {
+                buyButton.addClass('disabled-btn');
+            } else {
+                buyButton.removeClass('disabled-btn');
+            }
 
-            console.log(`Cập nhật trạng thái: ${newStatus}, Class: ${newStatus.toLowerCase().replace(' ', '-')}`);
+            saveDataToLocalStorage();
         }
+
 
         function updateNote(input, index) {
             const value = $(input).val();
@@ -968,8 +1034,11 @@
         }
 
         function buyItem(index) {
-            const item = filteredData[index];
+            // Tính toán lại chỉ số gốc của sản phẩm trong danh sách dựa trên trang hiện tại
+            const globalIndex = (currentPage - 1) * itemsPerPage + index;
+            const item = filteredData[globalIndex]; // Sử dụng chỉ số chính xác của sản phẩm
             const originalIndex = allData.findIndex(d => d.SKU === item.SKU);
+
             if (originalIndex === -1) return; // Nếu không tìm thấy item, thoát khỏi hàm
 
             const canMua = parseInt(item['Số lượng cần mua']) || 0;
@@ -985,6 +1054,7 @@
 
             console.log(`Đã mua sản phẩm: ${item['Tên sản phẩm']}, Số lượng: ${canMua}`);
         }
+
 
         function updatePagination(totalItems) {
             const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -1041,6 +1111,9 @@
                 String(vietnamTime.getMinutes()).padStart(2, '0') + ':' +
                 String(vietnamTime.getSeconds()).padStart(2, '0');
 
+            // Lấy tên nhân viên từ localStorage
+            const tenNhanVien = localStorage.getItem('tenNhanVien') || 'Admin';
+
             const dataToSave = allData.filter(item =>
                 ['Đã mua', 'Vượt số lượng', 'Đang mua'].includes(item.trangThai)
             ).map(item => {
@@ -1056,7 +1129,7 @@
                     'Số lượng mua': daMua,
                     'Chênh lệch': chenhLech,
                     'Số tiền mua': item['Giá bán'] ? item['Giá bán'] * daMua : 0,
-                    'Người mua': 'Admin',
+                    'Người mua': tenNhanVien,
                     'Thời gian': formattedTime,
                     'Ghi chú': item.ghiChu || ''
                 };
@@ -1096,11 +1169,26 @@
         async function initializeReport() {
             try {
                 $('#reportContent').html('<p class="loading">Đang tải dữ liệu...</p>');
-                await fetchCombinedData(); // Luôn tải dữ liệu mới
+
+                // Kiểm tra xem có dữ liệu trong bộ nhớ cục bộ không
+                const duLieuDaLuu = loadDataFromLocalStorage();
+
+                if (duLieuDaLuu) {
+                    // Sử dụng dữ liệu đã lưu nếu có
+                    allData = duLieuDaLuu;
+                    console.log('Đã tải dữ liệu từ bộ nhớ cục bộ');
+                } else {
+                    // Chỉ tải dữ liệu mới nếu không có dữ liệu đã lưu
+                    allData = await fetchCombinedData();
+                    saveDataToLocalStorage();
+                    console.log('Đã tải dữ liệu mới từ API');
+                }
+
                 updateTable();
                 populateGroupFilter();
                 setupImageZoom();
             } catch (error) {
+                console.error('Lỗi trong initializeReport:', error);
                 $('#reportContent').html(`<p class="error">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.</p>`);
             }
         }
@@ -1249,15 +1337,24 @@
 
             $('#saveFilteredData').click(function () {
                 if (confirm('Bạn có chắc chắn muốn lưu dữ liệu đã mua vào bảng "Mua hàng"?')) {
+                    // Hiển thị overlay loading và vô hiệu hóa nút trong quá trình lưu dữ liệu
+                    $('#loadingOverlay').show();
+
                     saveFilteredDataToSheet()
                         .then(() => {
-                            // Không cần làm gì thêm ở đây vì reloadData đã được gọi trong saveFilteredDataToSheet
+                            // Không cần làm gì thêm vì reloadData đã được gọi trong saveFilteredDataToSheet
                         })
                         .catch(error => {
                             console.error('Lỗi:', error);
+                            alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
+                        })
+                        .finally(() => {
+                            // Ẩn overlay loading và kích hoạt lại nút sau khi hoàn thành
+                            $('#loadingOverlay').hide();
                         });
                 }
             });
+
 
             $('#refreshButton').click(function () {
                 if (confirm('Bạn có chắc chắn muốn làm mới dữ liệu?')) {
@@ -1281,6 +1378,9 @@
             });
         });
     </script>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
 </body>
 
 </html>
