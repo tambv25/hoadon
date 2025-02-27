@@ -369,7 +369,7 @@
             </div>
             <table class="invoice-table">
                 <tr>
-                    <th>TÊN SP</th>
+                    <th style="width: 50%;">TÊN SP</th>
                     <th>SL</th>
                     <th style="text-align: right;">ĐƠN GIÁ</th>
                     <th style="text-align: right;">TỔNG TIỀN</th>
@@ -629,17 +629,37 @@
 
             const invoiceItems = document.getElementById('invoiceItems');
             invoiceItems.innerHTML = '';
+
+            // Tạo đối tượng để nhóm các sản phẩm có cùng tên và đơn giá
+            const groupedItems = {};
+
             orderDetails.forEach(detail => {
+                const key = `${detail['Tên sản phẩm']}_${detail['Đơn giá']}`;
+
+                if (!groupedItems[key]) {
+                    groupedItems[key] = {
+                        name: detail['Tên sản phẩm'],
+                        price: detail['Đơn giá'],
+                        quantity: 0
+                    };
+                }
+
+                // Cộng dồn số lượng
+                groupedItems[key].quantity += parseInt(detail['Số lượng'] || 1);
+            });
+
+            // Hiển thị các sản phẩm đã được gộp
+            Object.values(groupedItems).forEach(item => {
                 const row = invoiceItems.insertRow();
-                row.insertCell().textContent = detail['Tên sản phẩm'];
-                row.insertCell().textContent = detail['Số lượng'];
+                row.insertCell().textContent = item.name;
+                row.insertCell().textContent = item.quantity;
 
                 const dongiaCell = row.insertCell();
-                dongiaCell.textContent = formatCurrency(detail['Đơn giá']);
+                dongiaCell.textContent = formatCurrency(item.price);
                 dongiaCell.style.textAlign = 'right';
 
                 const totalCell = row.insertCell();
-                totalCell.textContent = formatCurrency(detail['Số lượng'] * detail['Đơn giá']);
+                totalCell.textContent = formatCurrency(item.quantity * item.price);
                 totalCell.style.textAlign = 'right';
             });
 
@@ -658,6 +678,7 @@
             };
             invoiceTemplate.appendChild(backButton);
         }
+
         function maskPhoneNumber(phoneNumber) {
             if (!phoneNumber) return '';
             if (!/^\d{10}$/.test(phoneNumber)) {
@@ -793,18 +814,40 @@
 
             const invoiceItems = template.querySelector('#invoiceItems');
             invoiceItems.innerHTML = '';
+
+            // Lấy chi tiết đơn hàng
             const orderDetails = chiTietData.filter(detail => detail.idban === order.idban);
+
+            // Tạo đối tượng để nhóm các sản phẩm có cùng tên và đơn giá
+            const groupedItems = {};
+
             orderDetails.forEach(detail => {
+                const key = `${detail['Tên sản phẩm']}_${detail['Đơn giá']}`;
+
+                if (!groupedItems[key]) {
+                    groupedItems[key] = {
+                        name: detail['Tên sản phẩm'],
+                        price: detail['Đơn giá'],
+                        quantity: 0
+                    };
+                }
+
+                // Cộng dồn số lượng
+                groupedItems[key].quantity += parseInt(detail['Số lượng'] || 1);
+            });
+
+            // Hiển thị các sản phẩm đã được gộp
+            Object.values(groupedItems).forEach(item => {
                 const row = invoiceItems.insertRow();
-                row.insertCell().textContent = detail['Tên sản phẩm'];
-                row.insertCell().textContent = detail['Số lượng'];
+                row.insertCell().textContent = item.name;
+                row.insertCell().textContent = item.quantity;
 
                 const dongiaCell = row.insertCell();
-                dongiaCell.textContent = formatCurrency(detail['Đơn giá']);
+                dongiaCell.textContent = formatCurrency(item.price);
                 dongiaCell.style.textAlign = 'right';
 
                 const totalCell = row.insertCell();
-                totalCell.textContent = formatCurrency(detail['Số lượng'] * detail['Đơn giá']);
+                totalCell.textContent = formatCurrency(item.quantity * item.price);
                 totalCell.style.textAlign = 'right';
             });
 
@@ -897,4 +940,5 @@
         $(window).resize(adjustTableHeight);
     </script>
 </body>
+
 </html>
