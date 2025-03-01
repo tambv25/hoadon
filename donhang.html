@@ -689,6 +689,7 @@
         }
 
         // Hàm xuất dữ liệu ra Excel với 2 tab
+        // Hàm xuất dữ liệu ra Excel với 2 tab
         function exportToExcel() {
             // Hiển thị loading spinner
             document.getElementById('loadingSpinner').style.display = 'flex';
@@ -698,19 +699,35 @@
                 const wb = XLSX.utils.book_new();
 
                 // Chuẩn bị dữ liệu cho tab đơn hàng
-                const orderData = filteredData.map(item => ({
-                    'Phiếu BH': item.idban,
-                    'Ngày bán': item['Ngày bán'],
-                    'Khách hàng': item['Khách hàng'],
-                    'SĐT': item.SĐT,
-                    'Địa chỉ': item['Địa chỉ'],
-                    'Phí Ship': parseFloat(item['Phí ship'] || 0),
-                    'Tổng Tiền': parseFloat(item['Tổng tiền'] || 0),
-                    'Giảm giá': parseFloat(item['Giảm giá theo tiền'] || 0),
-                    'Còn Phải Thanh Toán': parseFloat(item['Còn phải thanh toán'] || 0),
-                    'Nhân viên bán': item['Nhân viên bán'],
-                    'Ghi chú': item['Ghi chú'] || ''
-                }));
+                const orderData = filteredData.map(item => {
+                    // Định dạng ngày theo kiểu dd/mm/yyyy
+                    let formattedDate = item['Ngày bán'];
+                    try {
+                        const date = new Date(item['Ngày bán']);
+                        if (!isNaN(date.getTime())) {
+                            const day = date.getDate().toString().padStart(2, '0');
+                            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                            const year = date.getFullYear();
+                            formattedDate = day + '/' + month + '/' + year;
+                        }
+                    } catch (e) {
+                        console.error("Lỗi khi định dạng ngày cho Excel:", e);
+                    }
+
+                    return {
+                        'Phiếu BH': item.idban,
+                        'Ngày bán': formattedDate,
+                        'Khách hàng': item['Khách hàng'],
+                        'SĐT': item.SĐT,
+                        'Địa chỉ': item['Địa chỉ'],
+                        'Phí Ship': parseFloat(item['Phí ship'] || 0),
+                        'Tổng Tiền': parseFloat(item['Tổng tiền'] || 0),
+                        'Giảm giá': parseFloat(item['Giảm giá theo tiền'] || 0),
+                        'Còn Phải Thanh Toán': parseFloat(item['Còn phải thanh toán'] || 0),
+                        'Nhân viên bán': item['Nhân viên bán'],
+                        'Ghi chú': item['Ghi chú'] || ''
+                    };
+                });
 
                 // Tạo worksheet cho đơn hàng
                 const wsOrders = XLSX.utils.json_to_sheet(orderData);
