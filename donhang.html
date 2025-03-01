@@ -280,8 +280,8 @@
                                 <th>STT</th>
                                 <th>Tên sản phẩm</th>
                                 <th>Số lượng</th>
-                                <th>Đơn giá</th>
-                                <th>Thành tiền</th>
+                                <th style="text-align: right;">Đơn giá</th>
+                                <th style="text-align: right;">Thành tiền</th>
                             </tr>
                         </thead>
                         <tbody id="detailProductsList">
@@ -446,32 +446,52 @@
                         }
                     },
                     { data: 'idban' },
-                    { data: 'Ngày bán' },
+                    {
+                        data: 'Ngày bán',
+                        render: function (data, type) {
+                            // Khi sắp xếp, sử dụng định dạng nguyên bản
+                            if (type === 'sort') {
+                                return new Date(data).getTime();
+                            }
+
+                            // Định dạng hiển thị dd/mm/yyyy
+                            if (data) {
+                                const date = new Date(data);
+                                if (!isNaN(date.getTime())) {
+                                    const day = date.getDate().toString().padStart(2, '0');
+                                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                    const year = date.getFullYear();
+                                    return day + '/' + month + '/' + year;
+                                }
+                            }
+                            return data;
+                        }
+                    },
                     { data: 'Khách hàng' },
                     { data: 'SĐT' },
                     { data: 'Địa chỉ' },
                     {
                         data: 'Phí ship',
                         render: function (data) {
-                            return formatCurrency(data);
+                            return '<div style="text-align: right;">' + formatCurrency(data) + '</div>';
                         }
                     },
                     {
                         data: 'Tổng tiền',
                         render: function (data) {
-                            return formatCurrency(data);
+                            return '<div style="text-align: right;">' + formatCurrency(data) + '</div>';
                         }
                     },
                     {
                         data: 'Giảm giá theo tiền',
                         render: function (data) {
-                            return formatCurrency(data);
+                            return '<div style="text-align: right;">' + formatCurrency(data) + '</div>';
                         }
                     },
                     {
                         data: 'Còn phải thanh toán',
                         render: function (data) {
-                            return formatCurrency(data);
+                            return '<div style="text-align: right;">' + formatCurrency(data) + '</div>';
                         }
                     },
                     { data: 'Nhân viên bán' },
@@ -487,8 +507,9 @@
                 },
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
-                scrollY: false,          // Tắt scrollY
-                scrollCollapse: false    // Tắt scrollCollapse
+                scrollY: false,
+                scrollCollapse: false,
+                order: [[2, 'desc']]  // hiển thị ngày mới nhất lên đầu
             });
         }
 
@@ -505,7 +526,22 @@
             document.getElementById('detailCustomerAddress').textContent = order['Địa chỉ'];
 
             // Hiển thị thông tin đơn hàng
-            document.getElementById('detailOrderDate').textContent = order['Ngày bán'];
+            // Định dạng ngày
+            let formattedDate = order['Ngày bán'];
+            try {
+                const date = new Date(order['Ngày bán']);
+                if (!isNaN(date.getTime())) {
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const year = date.getFullYear();
+                    formattedDate = day + '/' + month + '/' + year;
+                }
+            } catch (e) {
+                console.error("Lỗi khi định dạng ngày:", e);
+            }
+
+            // Hiển thị thông tin đơn hàng
+            document.getElementById('detailOrderDate').textContent = formattedDate;
             document.getElementById('detailStaff').textContent = order['Nhân viên bán'];
             document.getElementById('detailNotes').textContent = order['Ghi chú'] || 'Không có';
 
@@ -546,9 +582,11 @@
 
                 const priceCell = row.insertCell(3);
                 priceCell.textContent = formatCurrency(item.price);
+                priceCell.style.textAlign = 'right'; // Add this line to right-align
 
                 const totalCell = row.insertCell(4);
                 totalCell.textContent = formatCurrency(item.quantity * item.price);
+                totalCell.style.textAlign = 'right'; // Add this line to right-align
             });
 
             // Ẩn bảng chính, hiển thị chi tiết đơn hàng
@@ -699,6 +737,8 @@
                 // Chuẩn bị dữ liệu cho tab chi tiết đơn hàng
                 const detailData = chiTietData.map(item => ({
                     'Phiếu BH': item.idban,
+                    'Nhóm sản phẩm': item['Nhóm sản phẩm'],
+                    'Mã sản phẩm': item['SKU'],
                     'Tên sản phẩm': item['Tên sản phẩm'],
                     'Số lượng': parseInt(item['Số lượng'] || 1),
                     'Đơn giá': parseFloat(item['Đơn giá'] || 0),
@@ -711,7 +751,9 @@
                 // Thiết lập độ rộng cột
                 const detailColWidth = [
                     { wch: 15 }, // Phiếu BH
-                    { wch: 30 }, // Tên sản phẩm
+                    { wch: 25 }, // Nhóm sản phẩm
+                    { wch: 15 }, // Mã sản phẩm
+                    { wch: 40 }, // Tên sản phẩm
                     { wch: 10 }, // Số lượng
                     { wch: 15 }, // Đơn giá
                     { wch: 15 }  // Thành tiền
