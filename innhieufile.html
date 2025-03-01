@@ -41,20 +41,18 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            display: block;
+            overflow: visible;
         }
 
         #dataTable_wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            display: block;
         }
 
         #dataTable_wrapper .row:nth-child(2) {
-            flex-grow: 1;
-            overflow: auto;
+            width: 100%;
+            overflow: visible;
         }
 
         #dataTable {
@@ -62,8 +60,7 @@
         }
 
         .dataTables_scrollBody {
-            flex-grow: 1;
-            overflow: auto !important;
+            overflow: visible !important;
         }
 
         .invoice-template {
@@ -246,7 +243,6 @@
             }
 
             * {
-                color-adjust: exact !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -536,6 +532,7 @@
             if (dataTable) {
                 dataTable.destroy();
             }
+
             dataTable = $('#dataTable').DataTable({
                 data: filteredData,
                 columns: [
@@ -546,7 +543,27 @@
                         }
                     },
                     { data: 'idban' },
-                    { data: 'Ngày bán' },
+                    {
+                        data: 'Ngày bán',
+                        render: function (data, type) {
+                            // Khi sắp xếp, sử dụng định dạng nguyên bản
+                            if (type === 'sort') {
+                                return new Date(data).getTime();
+                            }
+
+                            // Định dạng hiển thị dd/mm/yyyy
+                            if (data) {
+                                const date = new Date(data);
+                                if (!isNaN(date.getTime())) {
+                                    const day = date.getDate().toString().padStart(2, '0');
+                                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                    const year = date.getFullYear();
+                                    return day + '/' + month + '/' + year;
+                                }
+                            }
+                            return data;
+                        }
+                    },
                     { data: 'Khách hàng' },
                     { data: 'SĐT' },
                     { data: 'Địa chỉ' },
@@ -587,29 +604,8 @@
                 },
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
-                scrollY: '100%',
-                scrollCollapse: true
+                order: [[2, 'desc']]
             });
-
-            // Điều chỉnh chiều cao của bảng sau khi khởi tạo
-            $(window).resize(function () {
-                adjustTableHeight();
-            });
-            adjustTableHeight();
-        }
-
-        function adjustTableHeight() {
-            var windowHeight = $(window).height();
-            var actionGroupHeight = $('.action-group').outerHeight(true);
-            var tableContainerPadding = parseInt($('.table-container').css('padding-top')) +
-                parseInt($('.table-container').css('padding-bottom'));
-            var dataTableHeaderHeight = $('#dataTable_wrapper .row:first-child').outerHeight(true);
-            var dataTableFooterHeight = $('#dataTable_wrapper .row:last-child').outerHeight(true);
-
-            var availableHeight = windowHeight - actionGroupHeight - tableContainerPadding -
-                dataTableHeaderHeight - dataTableFooterHeight - 30; // 30px buffer
-
-            $('.dataTables_scrollBody').css('max-height', availableHeight + 'px');
         }
 
         function showOrderDetail(orderId) {
@@ -778,7 +774,7 @@
                 printContainer.innerHTML = '';
             };
 
-            // Bắt đầu quá trình in sau một khoảng thời gian ngắn
+            // Bắt đầu quá trình in sau một khoảng thời gian
             setTimeout(() => {
                 window.print();
 
@@ -935,9 +931,6 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
         };
-
-        // Gọi adjustTableHeight khi cửa sổ thay đổi kích thước
-        $(window).resize(adjustTableHeight);
     </script>
 </body>
 
