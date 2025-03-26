@@ -613,7 +613,7 @@
             document.getElementById('invoiceCustomerAddress').textContent = order['Địa chỉ'];
             document.getElementById('invoiceTotal').textContent = formatCurrency(order['Tổng tiền']);
             document.getElementById('invoiceShipping').textContent = formatCurrency(order['Phí ship']);
-            document.getElementById('invoiceDiscount').textContent = formatCurrency(order['Giảm giá theo tiền']);
+            document.getElementById('invoiceDiscount').textContent = formatCurrency(order['Giảm giá']);
             document.getElementById('invoicePaid').textContent = formatCurrency(order['Đã thanh toán'] || '0');
             document.getElementById('invoiceRemaining').textContent = formatCurrency(order['Còn phải thanh toán']);
             document.getElementById('invoiceghichu').textContent = order['Ghi chú'];
@@ -798,7 +798,7 @@
             template.querySelector('#invoiceCustomerAddress').textContent = order['Địa chỉ'];
             template.querySelector('#invoiceTotal').textContent = formatCurrency(order['Tổng tiền']);
             template.querySelector('#invoiceShipping').textContent = formatCurrency(order['Phí ship']);
-            template.querySelector('#invoiceDiscount').textContent = formatCurrency(order['Giảm giá theo tiền']);
+            template.querySelector('#invoiceDiscount').textContent = formatCurrency(order['Giảm giá']);
             template.querySelector('#invoicePaid').textContent = formatCurrency(order['Đã thanh toán'] || '0');
             template.querySelector('#invoiceRemaining').textContent = formatCurrency(order['Còn phải thanh toán']);
             template.querySelector('#invoiceghichu').textContent = order['Ghi chú'];
