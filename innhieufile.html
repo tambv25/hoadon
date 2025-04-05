@@ -712,7 +712,7 @@
                 const accountNumber = selectedAccount.text.split(':')[1].split('-')[0].trim();
                 const accountName = selectedAccount.text.split('-')[1].trim();
 
-                const qrCodeUrl = `https://img.vietqr.io/image/${bankInfo}-${accountNumber}-compact.png?amount=${amount}&addInfo=Thanh toan don hang&accountName=${encodeURIComponent(accountName)}`;
+                const qrCodeUrl = `https://img.vietqr.io/image/${bankInfo}-${accountNumber}-compact.png?amount=${amount}&addInfo=Giao dịch thành công&accountName=${encodeURIComponent(accountName)}`;
                 const qrCodeImg = document.createElement('img');
                 qrCodeImg.src = qrCodeUrl;
                 qrCodeImg.alt = "QR Code";
