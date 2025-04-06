@@ -200,12 +200,18 @@
                         <input type="date" id="endDate" class="form-control" placeholder="Đến ngày">
                     </div>
                     <div class="col-md-2">
+                        <button id="exportShippingBtn" class="btn btn-primary w-100" data-bs-toggle="tooltip"
+                            title="Xuất dữ liệu đơn giao hàng ra file Excel">
+                            <i class="bi bi-truck"></i> Xuất đơn
+                        </button>   
+                    </div>
+                    <div class="col-md-1">
                         <button id="exportExcelBtn" class="btn btn-success w-100" data-bs-toggle="tooltip"
                             title="Xuất dữ liệu ra file Excel">
-                            <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+                            <i class="bi bi-file-earmark-excel"></i> Excel
                         </button>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <button id="deleteSelectedBtn" class="btn btn-danger w-100" data-bs-toggle="tooltip"
                             title="Xóa đơn hàng đã chọn">
                             <i class="bi bi-trash"></i> Xóa
@@ -301,6 +307,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/exceljs/dist/exceljs.min.js"></script>
     <script>
         const APP_ID = 'f4addc6b-0e3c-4920-a52d-3047369b2ae4';
         const API_KEY = 'V2-0VqkW-qgxkc-C42EP-aTrK1-SGylq-C5EPN-yt3Nd-pcYie';
@@ -511,6 +518,8 @@
                 scrollCollapse: false,
                 order: [[2, 'desc']]  // hiển thị ngày mới nhất lên đầu
             });
+            // Thêm dòng này
+            onDataTableReady();
         }
 
         function showOrderDetail(orderId) {
@@ -688,7 +697,310 @@
             initializeDataTable();
         }
 
-        // Hàm xuất dữ liệu ra Excel với 2 tab
+
+        function exportVTPExcel() {
+            // Show loading spinner
+            document.getElementById('loadingSpinner').style.display = 'flex';
+
+            try {
+                // Create a new workbook
+                const workbook = new ExcelJS.Workbook();
+
+                // Tạo worksheet "Tổng hợp" (summary sheet) FIRST
+                const summaryWorksheet = workbook.addWorksheet('Tổng hợp');
+
+                // Tạo worksheet "Danh sách" (detailed sheet) SECOND
+                const detailWorksheet = workbook.addWorksheet('Danh sách');
+
+                // Define the same headers for both sheets
+                const headers = [
+                    'STT',                      // A
+                    'Mã đơn hàng',             // B
+                    'Tên người nhận (*)',       // C
+                    'Số ĐT người nhận (*)',     // D
+                    'Địa chỉ nhận (*)',         // E
+                    'Tên hàng hóa (*)',         // F
+                    'Số lượng',                 // G
+                    'Trọng lượng (gram) (*)',   // H
+                    'Giá trị hàng (VND) (*)',   // I
+                    'Tiền thu hộ COD (VND)',    // J
+                    'Loại hàng hóa (*)',        // K
+                    'Tính chất hàng hóa đặc biệt', // L
+                    'Dịch vụ (*)',              // M
+                    'Dịch vụ cộng thêm',        // N
+                    'Thu tiền xem hàng',        // O
+                    'Dài (cm)',                 // P
+                    'Rộng (cm)',                // Q
+                    'Cao (cm)',                 // R
+                    'Người trả cước',           // S
+                    'Yêu cầu khác',             // T
+                    'Thời gian hẹn lấy',        // U
+                    'Thời gian giao'            // V
+                ];
+
+                // ===== SETUP SUMMARY SHEET =====
+                // Tạo header "TỔNG HỢP ĐƠN HÀNG" 
+                summaryWorksheet.mergeCells('F1:O1');
+                summaryWorksheet.getCell('F1').value = 'TỔNG HỢP ĐƠN HÀNG';
+                summaryWorksheet.getCell('F1').font = { bold: true, size: 16, color: { argb: '004D33' } };
+                summaryWorksheet.getCell('F1').alignment = { horizontal: 'center' };
+
+                summaryWorksheet.getCell('A1').value = '(*) là các trường bắt buộc nhập';
+                summaryWorksheet.getCell('A1').font = { color: { argb: 'FF0000' } };
+
+                // Tiêu đề "Chọn list Excel" cho các cột dropdown trong sheet tổng hợp
+                const dropdownHeaders = [
+                    { cell: 'K2', width: 15 },   // Loại hàng hóa
+                    { cell: 'L2', width: 22 },   // Tính chất hàng hóa
+                    { cell: 'M2', width: 15 },   // Dịch vụ
+                    { cell: 'N2', width: 20 },   // Dịch vụ cộng thêm
+                    { cell: 'O2', width: 15 },   // Thu tiền xem hàng
+                    { cell: 'S2', width: 15 },   // Người trả cước
+                    { cell: 'U2', width: 20 },   // Thời gian hẹn lấy
+                    { cell: 'V2', width: 20 }    // Thời gian giao
+                ];
+
+                // Thêm tiêu đề "Chọn list Excel" cho các cột dropdown trong sheet tổng hợp
+                dropdownHeaders.forEach(header => {
+                    summaryWorksheet.getCell(header.cell).value = 'Chọn list Excel';
+                    summaryWorksheet.getCell(header.cell).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFFFF00' } // Yellow
+                    };
+                    summaryWorksheet.getCell(header.cell).font = { bold: true };
+                    summaryWorksheet.getCell(header.cell).alignment = { horizontal: 'center' };
+                });
+
+                // Thêm header vào sheet tổng hợp
+                const summaryRow3 = summaryWorksheet.getRow(3);
+                headers.forEach((header, index) => {
+                    const colLetter = String.fromCharCode(65 + index); // A, B, C, ...
+                    summaryRow3.getCell(colLetter).value = header;
+                    summaryRow3.getCell(colLetter).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FF90EE90' } // Light green
+                    };
+                    summaryRow3.getCell(colLetter).font = { bold: true };
+                    summaryRow3.getCell(colLetter).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                });
+
+                // Set column widths for summary sheet
+                summaryWorksheet.columns.forEach((column, index) => {
+                    let width = 12;
+                    if (index === 0) width = 5;      // STT
+                    else if (index === 2) width = 20; // Tên người nhận
+                    else if (index === 4) width = 30; // Địa chỉ
+                    else if (index === 5) width = 25; // Tên hàng hóa
+                    else if (index === 11) width = 22; // Tính chất hàng
+                    else if (index === 13) width = 18; // Dịch vụ cộng thêm
+                    else if (index === 19) width = 20; // Yêu cầu khác
+                    else if (index === 20) width = 22; // Thời gian hẹn lấy
+                    column.width = width;
+                });
+
+                // ===== SETUP DETAILED SHEET =====
+                // Tạo header "DANH SÁCH ĐƠN HÀNG"
+                detailWorksheet.mergeCells('F1:O1');
+                detailWorksheet.getCell('F1').value = 'DANH SÁCH ĐƠN HÀNG';
+                detailWorksheet.getCell('F1').font = { bold: true, size: 16, color: { argb: '004D33' } };
+                detailWorksheet.getCell('F1').alignment = { horizontal: 'center' };
+
+                detailWorksheet.getCell('A1').value = '(*) là các trường bắt buộc nhập';
+                detailWorksheet.getCell('A1').font = { color: { argb: 'FF0000' } };
+
+                // Thêm tiêu đề "Chọn list Excel" cho các cột dropdown trong sheet chi tiết
+                dropdownHeaders.forEach(header => {
+                    detailWorksheet.getCell(header.cell).value = 'Chọn list Excel';
+                    detailWorksheet.getCell(header.cell).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFFFFF00' } // Yellow
+                    };
+                    detailWorksheet.getCell(header.cell).font = { bold: true };
+                    detailWorksheet.getCell(header.cell).alignment = { horizontal: 'center' };
+                });
+
+                // Thêm header hàng thứ 3 của sheet chi tiết - giống hệt sheet tổng hợp
+                const detailRow3 = detailWorksheet.getRow(3);
+                headers.forEach((header, index) => {
+                    const colLetter = String.fromCharCode(65 + index); // A, B, C, ...
+                    detailRow3.getCell(colLetter).value = header;
+                    detailRow3.getCell(colLetter).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FF90EE90' } // Light green
+                    };
+                    detailRow3.getCell(colLetter).font = { bold: true };
+                    detailRow3.getCell(colLetter).alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                });
+
+                // Set column widths for detail sheet - giống hệt sheet tổng hợp
+                detailWorksheet.columns.forEach((column, index) => {
+                    let width = 12;
+                    if (index === 0) width = 5;      // STT
+                    else if (index === 2) width = 20; // Tên người nhận
+                    else if (index === 4) width = 30; // Địa chỉ
+                    else if (index === 5) width = 25; // Tên hàng hóa
+                    else if (index === 11) width = 22; // Tính chất hàng
+                    else if (index === 13) width = 18; // Dịch vụ cộng thêm
+                    else if (index === 19) width = 20; // Yêu cầu khác
+                    else if (index === 20) width = 22; // Thời gian hẹn lấy
+                    column.width = width;
+                });
+
+                // ===== POPULATE DATA =====
+                let detailRowIndex = 4; // Start from row 4 for detail sheet (after headers)
+                let summaryRowIndex = 4; // Start from row 4 for summary sheet (after headers)
+                let detailSttCounter = 1; // Counter for STT column in detail sheet
+                let summarySttCounter = 1; // Counter for STT column in summary sheet
+
+                // Duyệt qua từng đơn hàng
+                filteredData.forEach(order => {
+                    // Lấy chi tiết đơn hàng
+                    const orderDetails = chiTietData.filter(detail => detail.idban === order.idban);
+
+                    // Tạo mảng lưu trữ sản phẩm đã gộp (theo tên và đơn giá)
+                    const groupedItems = {};
+
+                    // Gộp các sản phẩm có cùng tên và đơn giá
+                    orderDetails.forEach(detail => {
+                        const key = `${detail['Tên sản phẩm']}_${detail['Đơn giá']}`;
+
+                        if (!groupedItems[key]) {
+                            groupedItems[key] = {
+                                name: detail['Tên sản phẩm'],
+                                price: detail['Đơn giá'],
+                                quantity: 0
+                            };
+                        }
+
+                        // Cộng dồn số lượng
+                        groupedItems[key].quantity += parseInt(detail['Số lượng'] || 1);
+                    });
+
+                    // Tính tổng tiền của đơn hàng
+                    const orderTotal = parseFloat(order['Tổng tiền'] || 0);
+
+                    // ===== ADD TO SUMMARY SHEET (ONE ROW PER ORDER) =====
+                    // Create a combined summary of all products in the order
+                    const productSummary = Object.values(groupedItems).map(item =>
+                        `${item.name} (${item.quantity})`
+                    ).join(', ');
+
+                    const totalQuantity = Object.values(groupedItems).reduce(
+                        (sum, item) => sum + item.quantity, 0
+                    );
+
+                    // Add to summary sheet (one row per order)
+                    summaryWorksheet.getCell(`A${summaryRowIndex}`).value = summarySttCounter++;
+                    summaryWorksheet.getCell(`B${summaryRowIndex}`).value = order.idban;
+                    summaryWorksheet.getCell(`C${summaryRowIndex}`).value = order['Khách hàng'];
+                    summaryWorksheet.getCell(`D${summaryRowIndex}`).value = order.SĐT;
+                    summaryWorksheet.getCell(`E${summaryRowIndex}`).value = order['Địa chỉ'];
+                    summaryWorksheet.getCell(`F${summaryRowIndex}`).value = productSummary;
+                    summaryWorksheet.getCell(`G${summaryRowIndex}`).value = totalQuantity;
+                    summaryWorksheet.getCell(`H${summaryRowIndex}`).value = ''; // Trọng lượng để trống
+                    summaryWorksheet.getCell(`I${summaryRowIndex}`).value = orderTotal; // Giá trị hàng
+                    summaryWorksheet.getCell(`J${summaryRowIndex}`).value = ''; // Tiền thu hộ COD để trống
+                    summaryWorksheet.getCell(`K${summaryRowIndex}`).value = ''; // Loại hàng hóa
+                    summaryWorksheet.getCell(`L${summaryRowIndex}`).value = ''; // Tính chất hàng hóa
+                    summaryWorksheet.getCell(`M${summaryRowIndex}`).value = ''; // Dịch vụ
+                    summaryWorksheet.getCell(`N${summaryRowIndex}`).value = ''; // Dịch vụ cộng thêm
+                    summaryWorksheet.getCell(`O${summaryRowIndex}`).value = ''; // Thu tiền xem hàng
+                    summaryWorksheet.getCell(`P${summaryRowIndex}`).value = ''; // Dài
+                    summaryWorksheet.getCell(`Q${summaryRowIndex}`).value = ''; // Rộng
+                    summaryWorksheet.getCell(`R${summaryRowIndex}`).value = ''; // Cao
+                    summaryWorksheet.getCell(`S${summaryRowIndex}`).value = ''; // Người trả cước
+                    summaryWorksheet.getCell(`T${summaryRowIndex}`).value = order['Ghi chú'] || ''; // Ghi chú
+                    summaryWorksheet.getCell(`U${summaryRowIndex}`).value = ''; // Thời gian hẹn lấy
+                    summaryWorksheet.getCell(`V${summaryRowIndex}`).value = ''; // Thời gian giao
+
+                    // Format number cells
+                    summaryWorksheet.getCell(`I${summaryRowIndex}`).numFmt = '#,##0';
+
+                    // Increment summary row counter
+                    summaryRowIndex++;
+
+                    // ===== ADD TO DETAIL SHEET (ONE ROW PER PRODUCT) =====
+                    // Xuất từng sản phẩm thành một dòng riêng biệt trong sheet chi tiết
+                    Object.values(groupedItems).forEach((item, productIndex) => {
+                        const detailRowNumber = detailRowIndex++;
+
+                        // Add STT
+                        detailWorksheet.getCell(`A${detailRowNumber}`).value = detailSttCounter++;
+
+                        // Add order data
+                        detailWorksheet.getCell(`B${detailRowNumber}`).value = order.idban;
+                        detailWorksheet.getCell(`C${detailRowNumber}`).value = order['Khách hàng'];
+                        detailWorksheet.getCell(`D${detailRowNumber}`).value = order.SĐT;
+                        detailWorksheet.getCell(`E${detailRowNumber}`).value = order['Địa chỉ'];
+                        detailWorksheet.getCell(`F${detailRowNumber}`).value = item.name;
+                        detailWorksheet.getCell(`G${detailRowNumber}`).value = item.quantity;
+                        detailWorksheet.getCell(`H${detailRowNumber}`).value = ''; // Default weight
+                        detailWorksheet.getCell(`I${detailRowNumber}`).value = item.price * item.quantity; // Giá trị của hàng hóa này
+
+                        // Leave COD amount empty as requested
+                        detailWorksheet.getCell(`J${detailRowNumber}`).value = ''; // Tiền thu hộ COD để trống
+
+                        detailWorksheet.getCell(`K${detailRowNumber}`).value = ''; // Loại hàng hóa
+                        detailWorksheet.getCell(`L${detailRowNumber}`).value = ''; // Tính chất hàng hóa
+                        detailWorksheet.getCell(`M${detailRowNumber}`).value = ''; // Dịch vụ
+                        detailWorksheet.getCell(`N${detailRowNumber}`).value = ''; // Dịch vụ cộng thêm
+                        detailWorksheet.getCell(`O${detailRowNumber}`).value = ''; // Thu tiền xem hàng
+                        detailWorksheet.getCell(`P${detailRowNumber}`).value = ''; // Dài
+                        detailWorksheet.getCell(`Q${detailRowNumber}`).value = ''; // Rộng
+                        detailWorksheet.getCell(`R${detailRowNumber}`).value = ''; // Cao
+                        detailWorksheet.getCell(`S${detailRowNumber}`).value = ''; // Người trả cước
+
+                        // Ghi chú chỉ hiển thị ở dòng đầu tiên của mỗi đơn hàng
+                        if (productIndex === 0) {
+                            detailWorksheet.getCell(`T${detailRowNumber}`).value = order['Ghi chú'] || '';
+                        } else {
+                            detailWorksheet.getCell(`T${detailRowNumber}`).value = '';
+                        }
+
+                        detailWorksheet.getCell(`U${detailRowNumber}`).value = ''; // Thời gian hẹn lấy
+                        detailWorksheet.getCell(`V${detailRowNumber}`).value = ''; // Thời gian giao
+                    });
+                });
+
+                // Đặt worksheet "Tổng hợp" làm active sheet
+                workbook.views = [
+                    {
+                        firstSheet: 0,
+                        activeTab: 0, // Make "Tổng hợp" the active sheet (0-based index)
+                        visibility: 'visible'
+                    }
+                ];
+
+                // Tạo tên file với thời gian hiện tại
+                const now = new Date();
+                const fileName = `Don_giao_hang_VTP_${now.getDate()}_${now.getMonth() + 1}_${now.getFullYear()}_${now.getHours()}_${now.getMinutes()}.xlsx`;
+
+                // Xuất file Excel
+                workbook.xlsx.writeBuffer().then(buffer => {
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    // Hide loading spinner
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                });
+
+            } catch (error) {
+                console.error('Error exporting VTP Excel:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                alert('Có lỗi xảy ra khi xuất file Excel. Vui lòng thử lại sau.');
+            }
+        }
+
+
         // Hàm xuất dữ liệu ra Excel với 2 tab
         function exportToExcel() {
             // Hiển thị loading spinner
@@ -744,7 +1056,7 @@
                     { wch: 15 }, // Giảm giá
                     { wch: 20 }, // Còn Phải Thanh Toán
                     { wch: 15 }, // Nhân viên bán
-                    { wch: 30 }  // Ghi chú
+                    { wch: 30 } // Ghi chú
                 ];
                 wsOrders['!cols'] = orderColWidth;
 
@@ -773,7 +1085,7 @@
                     { wch: 40 }, // Tên sản phẩm
                     { wch: 10 }, // Số lượng
                     { wch: 15 }, // Đơn giá
-                    { wch: 15 }  // Thành tiền
+                    { wch: 15 } // Thành tiền
                 ];
                 wsDetails['!cols'] = detailColWidth;
 
@@ -782,7 +1094,8 @@
 
                 // Tạo tên file với ngày giờ hiện tại
                 const now = new Date();
-                const fileName = `Don_hang_${now.getDate()}_${now.getMonth() + 1}_${now.getFullYear()}_${now.getHours()}_${now.getMinutes()}.xlsx`;
+                const fileName = `Don_hang_${now.getDate()}_${now.getMonth() +
+                    1}_${now.getFullYear()}_${now.getHours()}_${now.getMinutes()}.xlsx`;
 
                 // Xuất file Excel
                 XLSX.writeFile(wb, fileName);
@@ -796,6 +1109,9 @@
                 alert('Có lỗi xảy ra khi xuất file Excel. Vui lòng thử lại sau.');
             }
         }
+
+        document.getElementById('exportShippingBtn').addEventListener('click', exportVTPExcel);
+
 
         // Thêm sự kiện click cho nút xuất Excel
         document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
@@ -826,6 +1142,53 @@
         document.getElementById('startDate').addEventListener('change', searchOrders);
         document.getElementById('endDate').addEventListener('change', searchOrders);
 
+        // Thêm đoạn code này vào phần cuối file JavaScript của bạn
+
+        // Hàm tạo tooltip đơn giản
+        function addSimpleTooltips() {
+            // Dữ liệu tooltip
+            const tooltips = {
+                'K': {
+                    title: 'Loại hàng hóa',
+                    text: 'Chọn loại hàng hóa là Bưu kiện hoặc Tài liệu'
+                },
+                'L': {
+                    title: 'Tính chất hàng hóa',
+                    text: 'Chọn tính chất: Dễ vỡ, Chất lỏng, hoặc Không'
+                },
+                'J': {
+                    title: 'Tiền thu hộ COD',
+                    text: 'Tiền thu hộ bao gồm tiền hàng và phí ship (nếu người nhận trả cước)'
+                },
+                'E': {
+                    title: 'Địa chỉ nhận',
+                    text: 'Lưu ý ghi địa chỉ chính xác (tên tỉnh và huyện phải chuẩn)'
+                }
+            };
+
+            // Thêm tooltip cho header và cells
+            for (const [col, info] of Object.entries(tooltips)) {
+                // Lấy vị trí cột
+                const colIndex = col.charCodeAt(0) - 65 + 1; // A=1, B=2, ...
+
+                // Tạo tooltip cho header
+                const header = document.querySelector(`#dataTable thead th:nth-child(${colIndex})`);
+                if (header) {
+                    header.title = `${info.title}: ${info.text}`;
+                }
+
+                // Tạo tooltip cho cells
+                document.querySelectorAll(`#dataTable tbody tr td:nth-child(${colIndex})`).forEach(cell => {
+                    cell.title = `${info.title}: ${info.text}`;
+                });
+            }
+        }
+
+        // Gọi hàm này sau khi bảng được khởi tạo
+        function onDataTableReady() {
+            setTimeout(addSimpleTooltips, 500);
+        }
+
         // Initialization
         window.onload = function () {
             checkLoginStatus();
@@ -838,4 +1201,5 @@
         };
     </script>
 </body>
+
 </html>
