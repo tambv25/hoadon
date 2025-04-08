@@ -203,7 +203,7 @@
                         <button id="exportShippingBtn" class="btn btn-primary w-100" data-bs-toggle="tooltip"
                             title="Xuất dữ liệu đơn giao hàng ra file Excel">
                             <i class="bi bi-truck"></i> Xuất đơn
-                        </button>   
+                        </button>
                     </div>
                     <div class="col-md-1">
                         <button id="exportExcelBtn" class="btn btn-success w-100" data-bs-toggle="tooltip"
@@ -235,6 +235,7 @@
                             <th style="text-align: center; vertical-align: middle;">Giảm giá</th>
                             <th style="text-align: center; vertical-align: middle;">Còn Phải Thanh Toán</th>
                             <th style="text-align: center; vertical-align: middle;">Nhân viên bán</th>
+                            <th style="text-align: center; vertical-align: middle;">Ghi chú</th>
                             <th style="text-align: center; vertical-align: middle;">Thao tác</th>
                         </tr>
                     </thead>
@@ -502,6 +503,7 @@
                         }
                     },
                     { data: 'Nhân viên bán' },
+                    { data: 'Ghi chú' }, // Thêm cột Ghi chú ở đây
                     {
                         data: null,
                         render: function (data, type, row) {
@@ -703,6 +705,16 @@
             document.getElementById('loadingSpinner').style.display = 'flex';
 
             try {
+                // Get selected orders instead of using all filtered data
+                const selectedOrders = getSelectedOrders();
+
+                // Check if any orders are selected
+                if (selectedOrders.length === 0) {
+                    alert('Vui lòng chọn ít nhất một đơn hàng để xuất!');
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    return;
+                }
+
                 // Create a new workbook
                 const workbook = new ExcelJS.Workbook();
 
@@ -856,8 +868,8 @@
                 let detailSttCounter = 1; // Counter for STT column in detail sheet
                 let summarySttCounter = 1; // Counter for STT column in summary sheet
 
-                // Duyệt qua từng đơn hàng
-                filteredData.forEach(order => {
+                // Duyệt qua từng đơn hàng ĐÃ CHỌN thay vì duyệt qua filteredData
+                selectedOrders.forEach(order => {
                     // Lấy chi tiết đơn hàng
                     const orderDetails = chiTietData.filter(detail => detail.idban === order.idban);
 
@@ -903,7 +915,7 @@
                     summaryWorksheet.getCell(`G${summaryRowIndex}`).value = totalQuantity;
                     summaryWorksheet.getCell(`H${summaryRowIndex}`).value = ''; // Trọng lượng để trống
                     summaryWorksheet.getCell(`I${summaryRowIndex}`).value = orderTotal; // Giá trị hàng
-                    summaryWorksheet.getCell(`J${summaryRowIndex}`).value = ''; // Tiền thu hộ COD để trống
+                    summaryWorksheet.getCell(`J${summaryRowIndex}`).value = order['Còn phải thanh toán'] || ''; // Tiền thu hộ COD 
                     summaryWorksheet.getCell(`K${summaryRowIndex}`).value = ''; // Loại hàng hóa
                     summaryWorksheet.getCell(`L${summaryRowIndex}`).value = ''; // Tính chất hàng hóa
                     summaryWorksheet.getCell(`M${summaryRowIndex}`).value = ''; // Dịch vụ
@@ -919,6 +931,7 @@
 
                     // Format number cells
                     summaryWorksheet.getCell(`I${summaryRowIndex}`).numFmt = '#,##0';
+                    summaryWorksheet.getCell(`J${summaryRowIndex}`).numFmt = '#,##0';
 
                     // Increment summary row counter
                     summaryRowIndex++;
@@ -941,8 +954,12 @@
                         detailWorksheet.getCell(`H${detailRowNumber}`).value = ''; // Default weight
                         detailWorksheet.getCell(`I${detailRowNumber}`).value = item.price * item.quantity; // Giá trị của hàng hóa này
 
-                        // Leave COD amount empty as requested
-                        detailWorksheet.getCell(`J${detailRowNumber}`).value = ''; // Tiền thu hộ COD để trống
+                        // Add COD amount only to the first product of each order
+                        if (productIndex === 0) {
+                            detailWorksheet.getCell(`J${detailRowNumber}`).value = order['Còn phải thanh toán'] || '';
+                        } else {
+                            detailWorksheet.getCell(`J${detailRowNumber}`).value = '';
+                        }
 
                         detailWorksheet.getCell(`K${detailRowNumber}`).value = ''; // Loại hàng hóa
                         detailWorksheet.getCell(`L${detailRowNumber}`).value = ''; // Tính chất hàng hóa
@@ -963,6 +980,12 @@
 
                         detailWorksheet.getCell(`U${detailRowNumber}`).value = ''; // Thời gian hẹn lấy
                         detailWorksheet.getCell(`V${detailRowNumber}`).value = ''; // Thời gian giao
+
+                        // Format number cells
+                        detailWorksheet.getCell(`I${detailRowNumber}`).numFmt = '#,##0';
+                        if (productIndex === 0) {
+                            detailWorksheet.getCell(`J${detailRowNumber}`).numFmt = '#,##0';
+                        }
                     });
                 });
 
@@ -999,7 +1022,6 @@
                 alert('Có lỗi xảy ra khi xuất file Excel. Vui lòng thử lại sau.');
             }
         }
-
 
         // Hàm xuất dữ liệu ra Excel với 2 tab
         function exportToExcel() {
