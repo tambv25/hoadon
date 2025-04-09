@@ -687,7 +687,8 @@
             filteredData = allData.filter(order => {
                 const matchesSearch = order.idban.toLowerCase().includes(searchTerm) ||
                     order['Khách hàng'].toLowerCase().includes(searchTerm) ||
-                    order.SĐT.includes(searchTerm);
+                    order.SĐT.includes(searchTerm) ||
+                    (order['Ghi chú'] && order['Ghi chú'].toLowerCase().includes(searchTerm)); // Thêm tìm kiếm trong ghi chú
 
                 const orderDate = new Date(order['Ngày bán']);
                 const matchesStartDate = !startDate || orderDate >= new Date(startDate);
