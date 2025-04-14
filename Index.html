@@ -17,6 +17,7 @@
     </style>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
         body {
             font-family: 'Roboto', sans-serif;
         }
@@ -152,7 +153,7 @@
 
         <div class="top-info">
             <div style="text-align: center;">
-                <h2><strong>HÓA ĐƠN BÁN HÀNG</strong></h2>
+                <h2><strong>HÓA ĐƠN BÁN HÀNG - <span id="phieuBH"></span></strong></h2>
                 <div style="font-size: 17.5px;"><strong> KHÁCH HÀNG: <span id="tenkh"></span></strong></div>
                 <div style="font-size: 17.5px;"><strong> SĐT: <span id="sodtkh"></span></strong></div>
                 <div style="font-size: 16px;"><strong><span id="chinhanh"></span></strong></div>
@@ -189,7 +190,7 @@
                 <span>ĐÃ THANH TOÁN:</span>
                 <span id="khachdatra" style="text-align: right;"></span>
             </div>
-            <div style="display: flex; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; font-size: 14px;">
                 <span>CÒN PHẢI THANH TOÁN:</span>
                 <span id="conlai" style="text-align: right;"></span>
             </div>
@@ -241,6 +242,7 @@
     
         function updateUI() {
             document.getElementById('sodtkh').textContent = BAN_GIAO['SĐT'] || '';
+            document.getElementById('phieuBH').textContent = BAN_GIAO['SOBH'] || '';
             document.getElementById('tenkh').textContent = BAN_GIAO['Khách hàng'] || '';
             document.getElementById('chinhanh').textContent = BAN_GIAO['Địa chỉ'] || '';
             document.getElementById('tongGiaTri').textContent = formatCurrency(BAN_GIAO['Tổng tiền'] || '0');
